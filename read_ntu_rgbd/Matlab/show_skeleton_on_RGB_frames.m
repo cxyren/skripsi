@@ -67,6 +67,9 @@ for f=1:numel(bodyinfo)
                         yrange = [dy:sign(dy2-dy):dy2];
                         xrange = [dx:sign(dx2-dx)*abs((dx2-dx)/(dy2-dy)):dx2];
                     end
+                    fprintf('xrange : %i\n', xrange);
+                    fprintf('yrange : %i\n', yrange);
+                    disp(numel(xrange));
                     % draw the line!
                     for i=1:numel(xrange)
                         dx = int32(round(xrange(i)));
@@ -75,7 +78,7 @@ for f=1:numel(bodyinfo)
                         imrgb(dy-3:dy+3,dx-3:dx+3,2)=gv;
                         imrgb(dy-3:dy+3,dx-3:dx+3,3)=bv;
                     end
-                    
+
                     joint = bodyinfo(f).bodies(b).joints(j);
                     dx = int32(round(joint.colorX));
                     dy = int32(round(joint.colorY));

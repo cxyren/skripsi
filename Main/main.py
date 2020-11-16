@@ -25,6 +25,89 @@ def convert_avi_to_mp4(avi_file_path, output_name):
         )
     ff.run()
 
+def read_skeleton_file(filename):
+    file = open(filename)
+    framecount = file.readline()
+
+    bodyinfo = []
+    for i in range(int(framecount)):
+        bodycount = file.readline()
+        bodies = []
+        for j in range(int(bodycount)):
+            arraynum = file.readline().split()
+            body = {
+                "bodyID": arraynum[0],
+                "clipedEdges": arraynum[1],
+                "handLeftConfidence": arraynum[2],
+                "handLeftState": arraynum[3],
+                "handRightConfidence": arraynum[4],
+                "handRightState": arraynum[5],
+                "isResticted": arraynum[6],
+                "leanX": arraynum[7],
+                "leanY": arraynum[8],
+                "trackingState": arraynum[9],
+                "jointCount": file.readline(),
+                "joints": []
+            }
+            for k in range(int(body["jointCount"])):
+                jointinfo = file.readline().split()
+                joint={
+                    "x": jointinfo[0],
+                    "y": jointinfo[1],
+                    "z": jointinfo[2],
+                    "depthX": jointinfo[3],
+                    "depthY": jointinfo[4],
+                    "colorX": jointinfo[5],
+                    "colorY": jointinfo[6],
+                    "orientationW": jointinfo[7],
+                    "orientationX": jointinfo[8],
+                    "orientationY": jointinfo[9],
+                    "orientationZ": jointinfo[10],
+                    "trackingState": jointinfo[11]
+                }
+                body["joints"].append(joint)
+            bodies.append(body)
+        bodyinfo.append(bodies)
+    file.close()
+    return bodyinfo
+
+def bresenham_line(x0, y0, x1, y1):
+    steep = abs(y1 - y0) > abs(x1 - x0)
+    if steep:
+        x0, y0 = y0, x0  
+        x1, y1 = y1, x1
+
+    switched = False
+    if x0 > x1:
+        switched = True
+        x0, x1 = x1, x0
+        y0, y1 = y1, y0
+
+    if y0 < y1: 
+        ystep = 1
+    else:
+        ystep = -1
+
+    deltax = x1 - x0
+    deltay = abs(y1 - y0)
+    error = -deltax / 2
+    y = y0
+
+    line = []    
+    for x in range(x0, x1 + 1):
+        if steep:
+            line.append((y,x))
+        else:
+            line.append((x,y))
+
+        error = error + deltay
+        if error > 0:
+            y = y + ystep
+            error = error - deltax
+    if switched:
+        line.reverse()
+    return line
+
 #preprocessing video from csv and convert into frame
 train=pd.read_csv('D:/user/Documents/Skripsi/Dataset/RGB.csv')
 train.head()
