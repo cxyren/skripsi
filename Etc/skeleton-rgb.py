@@ -131,7 +131,7 @@ for i in range(len(bodyinfo)):
                 for m in range(len(line)):
                     dx = line[m][0]
                     dy = line[m][1]
-                    image = cv2.circle(image, (dx, dy), radius=3, color=(rv, gv, bv), thickness=-1)
+                    image = cv2.circle(image, (dx, dy), radius=3, color=(bv, gv, rv), thickness=-1)
 
                 #green color for points/ joints
                 rv = 0
@@ -142,7 +142,7 @@ for i in range(len(bodyinfo)):
                 dx = np.int32(round(float(joint['colorX'])))
                 dy = np.int32(round(float(joint['colorY'])))
 
-                image = cv2.circle(image, (dx, dy), radius=5, color=(rv, gv, bv), thickness=-1)
+                image = cv2.circle(image, (dx, dy), radius=5, color=(bv, gv, rv), thickness=-1)
         path = 'D:/user/Documents/Skripsi/Github-Program/Etc/Tes/'
         cv2.imwrite(os.path.join(path, videoname.split('_')[0] + "_frame%d.jpg" % i), image)
         success,image = videofile.read()
