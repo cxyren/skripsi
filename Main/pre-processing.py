@@ -110,7 +110,6 @@ def load_missing_file(path):
 
 #preprocessing video from csv and convert into frame
 train=pd.read_csv('D:/user/Documents/Skripsi/Dataset/RGB.csv')
-train.head()
 
 train_image = []
 
@@ -189,7 +188,7 @@ for i in tqdm(range(len(train))):
             dest_path = 'D:/user/Documents/Skripsi/Dataset/train/'
             filename = os.path.join(dest_path,  videoFile.split('_')[0] +"_frame%d.jpg" % count);count+=1
             cv2.imwrite(filename, frame)
-    print("success processing video : %d" %i + 1)
+    print("success processing video : %d" % (i + 1))
     cap.release()
 
 # getting the names of all the images

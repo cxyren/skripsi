@@ -16,7 +16,6 @@ from keras.applications.vgg16 import VGG16
 from keras.layers import Dense, InputLayer,Dropout, Flatten
 from keras.layers import Conv2D, MaxPooling2D, GlobalMaxPooling2D
 
-
 #training
 train=pd.read_csv('D:/user/Documents/Skripsi/Dataset/train_new.csv')
-train.head()
+
