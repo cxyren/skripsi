@@ -3,7 +3,7 @@ import keras
 from keras.models import Model
 from keras.layers import Dense, InputLayer, Dropout, Flatten
 from keras.applications.resnet50 import ResNet50, preprocess_input
-from keras_adabound import Adabound
+from keras_adabound import AdaBound
 from keras.preprocessing.image import ImageDataGenerator
 from keras.preprocessing import image
 import numpy as np
@@ -16,7 +16,7 @@ from sklearn import metrics
 
 #initialize
 num_epoch = 10
-num_split = 10
+num_split = 100
 weight_final = "modelActivity01.model"
 
 #training
@@ -52,10 +52,17 @@ y = train['class']
 trainX, testX, trainY, testY = train_test_split(X, y, random_state=42, test_size=0.25, stratify = y)
 
 if(num_split > 0):
+    print('SPLITTING')
     trainX = np.array_split(trainX, num_split)[0]
     trainY = np.array_split(trainY, num_split)[0]
     testX = np.array_split(testX, num_split)[0]
     testY = np.array_split(testY, num_split)[0]
+    train_csv = pd.DataFrame(data=(trainX,trainY)).transpose().reset_index()
+    test_csv = pd.DataFrame(data=(testX,testY)).transpose().reset_index()
+    del train_csv['index']
+    del test_csv['index']
+    train_csv.append(test_csv)
+    train_csv.to_csv('D:/user/Documents/Skripsi/Dataset/train1.csv')
 
 #initialize the training data augmentation object
 train_aug = ImageDataGenerator(
@@ -76,7 +83,7 @@ val_batches = val_aug.flow(testX, testY, batchsize=32)
 baseModel = ResNet50(
     weights='imagenet',
     include_top=False, 
-    input_tensor=Input(shape=224,224,3)
+    input_tensor=Input(shape=(224,224,3))
     )
 
 # construct the head of model
