@@ -16,6 +16,7 @@ from sklearn import metrics
 
 #initialize
 num_epoch = 10
+num_split = 10
 weight_final = "modelActivity01.model"
 
 #training
@@ -49,6 +50,12 @@ y = train['class']
 
 # creating the training and validation set
 trainX, testX, trainY, testY = train_test_split(X, y, random_state=42, test_size=0.25, stratify = y)
+
+if(num_split > 0):
+    trainX = np.array_split(trainX, num_split)[0]
+    trainY = np.array_split(trainY, num_split)[0]
+    testX = np.array_split(testX, num_split)[0]
+    testY = np.array_split(testY, num_split)[0]
 
 #initialize the training data augmentation object
 train_aug = ImageDataGenerator(
