@@ -108,9 +108,11 @@ def load_missing_file(path):
                 missing_files[line] = True 
     return missing_files 
 
-#preprocessing video from csv and convert into frame
-train=pd.read_csv('D:/user/Documents/Skripsi/Dataset/RGB.csv')
 
+skiprow = 1807
+#preprocessing video from csv and convert into frame
+train=pd.read_csv('D:/user/Documents/Skripsi/Dataset/RGB.csv', skiprows=skiprow)
+train.columns = ['video', 'class']
 train_image = []
 
 raw_path = 'D:/user/Documents/Skripsi/Dataset/RGB-raw/nturgb+d_rgb/'
@@ -122,8 +124,10 @@ connecting_joint = [2, 1, 21, 3, 21, 5, 6, 7, 21, 9, 10, 11, 1, 13, 14, 15, 1, 1
 
 missing_files = load_missing_file(missing_skeleton_path)
 
+# print(missing_files)
+
 # storing the frames from training videos
-for i in tqdm(range(len(train))):
+for i in tqdm(range(train.shape[0])):
     #get name of files
     videoFile = train['video'][i].split('.')[0]
     #convert avi into mp4
@@ -132,7 +136,7 @@ for i in tqdm(range(len(train))):
     cap = cv2.VideoCapture(os.path.join(mp4_path, videoFile + ".mp4")) 
     #skeleton files
     skeletonFile = videoFile.split('_')[0]
-    #chekc if skeleton file is missing or not
+    #check if skeleton file is missing or not
     if skeletonFile not in missing_files:
         #read skeleton file
         bodyinfo = read_skeleton_file(os.path.join(skeleton_path, skeletonFile + '.skeleton'))
@@ -178,16 +182,16 @@ for i in tqdm(range(len(train))):
                 dest_path = 'D:/user/Documents/Skripsi/Dataset/train/'
                 filename = os.path.join(dest_path,  videoFile.split('_')[0] +"_frame%d.jpg" % j)
                 cv2.imwrite(filename, frame)
-    else:
-        print("skeleton is missing")
-        count = 0
-        while(cap.isOpened()):
-            ret, frame = cap.read()
-            if (ret != True):
-                break
-            dest_path = 'D:/user/Documents/Skripsi/Dataset/train/'
-            filename = os.path.join(dest_path,  videoFile.split('_')[0] +"_frame%d.jpg" % count);count+=1
-            cv2.imwrite(filename, frame)
+    # else:
+    #     print("skeleton is missing")
+    #     count = 0
+    #     while(cap.isOpened()):
+    #         ret, frame = cap.read()
+    #         if (ret != True):
+    #             break
+    #         dest_path = 'D:/user/Documents/Skripsi/Dataset/train/'
+    #         filename = os.path.join(dest_path,  videoFile.split('_')[0] +"_frame%d.jpg" % count);count+=1
+    #         cv2.imwrite(filename, frame)
     print("success processing video : %d" % (i + 1))
     cap.release()
 
