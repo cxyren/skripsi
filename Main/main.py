@@ -1,26 +1,29 @@
 import os
 import keras
 from keras.models import Model
-from keras.layers import Dense, InputLayer, Dropout, Flatten
+from keras.layers import Dense, InputLayer, Dropout, Flatten, AveragePooling2D
 from keras.applications.resnet50 import ResNet50, preprocess_input
 from keras_adabound import AdaBound
 from keras.preprocessing.image import ImageDataGenerator
-from keras.preprocessing import image
+import cv2
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from tqdm import tqdm
+from sklearn.preprocessing import LabelBinarizer
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import confusion_matrix, accuracy_score, classification_report
 from sklearn import metrics
+import pickle
 
 #initialize
 num_epoch = 10
 num_split = 100
-weight_final = "modelActivity01.model"
+weight_final = 'modelActivity01.model'
+lb_file = 'lb.pickle'
 
 #training
-train=pd.read_csv('D:/user/Documents/Skripsi/Dataset/train_new.csv')
+train = pd.read_csv('D:/user/Documents/Skripsi/Dataset/train_new_split2.csv')
 
 #path
 image_path = 'D:/user/Documents/Skripsi/Dataset/train/'
@@ -28,30 +31,34 @@ model_path = 'D:/user/Documents/Skripsi/Model/'
 
 # creating an empty list
 train_image = []
+label = []
 
 for i in tqdm(range(train.shape[0])):
+    if not train['class'][i]:
+        continue
     # loading the image and keeping the target size as (224,224,3)
-    img = image.load_img(os.path.join(image_path, train['image'][i]), target_size=(224,224,3))
+    img = cv2.imread(os.path.join(image_path, train['image'][i]))
     # converting it to array
-    img = image.img_to_array(img)
-    # normalizing the pixel value
-    img = img/255
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    img = cv2.resize(img, (224, 224))
     # appending the image to the train_image list
     train_image.append(img)
+    label.append(train['class'][i])
     
 # converting the list to numpy array
 X = np.array(train_image)
 
-# shape of the array
-X.shape
-
 # separating the target
-y = train['class']
+y = np.array(label)
+
+# perform one-hot encoding on the labels
+lb = LabelBinarizer()
+y = lb.fit_transform(y)
 
 # creating the training and validation set
 trainX, testX, trainY, testY = train_test_split(X, y, random_state=42, test_size=0.25, stratify = y)
 
-if(num_split > 0):
+if num_split > 0:
     print('SPLITTING')
     trainX = np.array_split(trainX, num_split)[0]
     trainY = np.array_split(trainY, num_split)[0]
@@ -88,9 +95,11 @@ baseModel = ResNet50(
 
 # construct the head of model
 headModel = baseModel.output
-headModel = Flatten(name='flatten')(baseModel)
-headModel = Dropout(0.5)(baseModel)
-headModel = Dense(np.unique(trainY).shpe[0], activation='softmax')(baseModel)
+headModel = AveragePooling2D(pool_size=(7, 7))(headModel)
+headModel = Flatten(name='flatten')(headModel)
+headModel = Dense(512, activation='relu')(headModel)
+headModel = Dropout(0.5)(headModel)
+headModel = Dense(len(lb.classes_), activation='softmax')(headModel)
 
 #place head model on top of base model
 model = Model(inputs=baseModel.input, output=headModel)
@@ -122,7 +131,7 @@ predictions = model.predict(x=testX.astype('float32'), batch_size=32)
 print("confusion Metrix"),
 print(confusion_matrix(testY.argmax(axis=1), predictions.argmax(axis=1)))
 print("classification report"),
-print(classification_report(testY.argmax(axis=1), predictions.argmax(axis=1), target_names=y))
+print(classification_report(testY.argmax(axis=1), predictions.argmax(axis=1), target_names=lb.classes_))
 score = model.evaluate(val_batches, steps=1000, verbose=1)
 print("Accuracy is %s " % (score[1]*100))
 
@@ -141,3 +150,8 @@ plt.savefig('plot.png')
 
 print("[INFO] serializing network...")
 model.save(os.path.join(model_path, weight_final), save_format="h5")
+
+# serialize the label binarizer to disk
+f = open(os.path.join(model_path, lb_file), "wb")
+f.write(pickle.dumps(lb))
+f.close()

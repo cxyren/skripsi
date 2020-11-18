@@ -108,8 +108,7 @@ def load_missing_file(path):
                 missing_files[line] = True 
     return missing_files 
 
-
-skiprow = 1807
+skiprow = 0
 #preprocessing video from csv and convert into frame
 train=pd.read_csv('D:/user/Documents/Skripsi/Dataset/RGB.csv', skiprows=skiprow)
 train.columns = ['video', 'class']
