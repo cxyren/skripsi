@@ -3,8 +3,8 @@ import keras
 from keras.models import Model
 from keras.layers import Dense, Input, Dropout, Flatten, AveragePooling2D
 from keras.applications.resnet50 import ResNet50, preprocess_input
-from keras_adabound import AdaBound
 from keras.preprocessing.image import ImageDataGenerator
+from keras.optimizers import Adam
 import cv2
 import numpy as np
 import pandas as pd
@@ -19,10 +19,12 @@ import pickle
 #initialize
 num_epochs = 10
 num_split = 0
-batchsize = 8
+batchsize = 32
 weight_final = 'modelActivity01.model'
-lb_file = 'lb.pickle'
-plt_file = 'plot.png'
+lb_file = 'lb01.pickle'
+plt_file = 'plot01.png'
+numpy_file = 'x.npy'
+label_path = 'y.npy'
 
 #training
 train = pd.read_csv('D:/user/Documents/Skripsi/Dataset/train_new.csv')
@@ -31,6 +33,7 @@ train = pd.read_csv('D:/user/Documents/Skripsi/Dataset/train_new.csv')
 image_path = 'D:/user/Documents/Skripsi/Dataset/train/'
 model_path = 'D:/user/Documents/Skripsi/Model/'
 plt_path = 'D:/user/Documents/Skripsi/github-program/main/Result/'
+numpy_path = 'D:/user/Documents/Skripsi/Dataset/'
 
 # creating an empty list
 train_image = []
@@ -53,8 +56,12 @@ del train
 # converting the list to numpy array
 X = np.array(train_image)
 
+X.save(os.path.join(numpy_path, numpy_file))
+
 # separating the target
 y = np.array(label)
+
+y.save(os.path.join(numpy_path, label_path))
 
 # perform one-hot encoding on the labels
 lb = LabelBinarizer()
@@ -107,7 +114,7 @@ model.summary()
 
 # compile our model (this needs to be done after our setting our layers to being non-trainable)
 print("[INFO] compiling model...")
-model.compile(optimizer=AdaBound(lr=1e-3, final_lr=0.1), loss='categorical_crossentropy', metrics=['accuracy'])
+model.compile(optimizer=Adam(lr=1e-3, final_lr=0.1), loss='categorical_crossentropy', metrics=['accuracy'])
 
 
 #train the head of the network for a few epochs (all other layers are frozen) -- this will allow the new FC layers to start to become initialized with actual "learned" values versus pure random
