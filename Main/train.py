@@ -15,24 +15,25 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import confusion_matrix, accuracy_score, classification_report
 from sklearn import metrics
 import pickle
+import gc
 
 #initialize
-num_epochs = 10
+num_epochs = 2
 num_split = 0
 batchsize = 32
 weight_final = 'modelActivity01.model'
 lb_file = 'lb01.pickle'
 plt_file = 'plot01.png'
-numpy_file = 'x.npy'
-label_path = 'y.npy'
+numpy_file = 'x01.npy'
+label_path = 'y01.npy'
 
 #training
-train = pd.read_csv('D:/user/Documents/Skripsi/Dataset/train_new.csv')
+train = pd.read_csv('D:/user/Documents/Skripsi/Dataset/train_1.csv')
 
 #path
 image_path = 'D:/user/Documents/Skripsi/Dataset/train/'
 model_path = 'D:/user/Documents/Skripsi/Model/'
-plt_path = 'D:/user/Documents/Skripsi/github-program/main/Result/'
+plt_path = 'D:/user/Documents/Skripsi/Hasil Tes/'
 numpy_path = 'D:/user/Documents/Skripsi/Dataset/'
 
 # creating an empty list
@@ -50,8 +51,10 @@ for i in tqdm(range(train.shape[0])):
     # appending the image to the train_image list
     train_image.append(img)
     label.append(train['class'][i])
-    
+    del img 
+    gc.collect()
 del train
+del gc.garbage[:] 
 
 # converting the list to numpy array
 X = np.array(train_image)
@@ -72,6 +75,8 @@ trainX, testX, trainY, testY = train_test_split(X, y, random_state=42, test_size
 
 del X
 del y
+gc.collect()
+del gc.garbage[:] 
 
 #initialize the training data augmentation object
 train_aug = ImageDataGenerator(
@@ -157,3 +162,6 @@ model.save(os.path.join(model_path, weight_final), save_format="h5")
 f = open(os.path.join(model_path, lb_file), "wb")
 f.write(pickle.dumps(lb))
 f.close()
+
+gc.collect()
+del gc.garbage[:] 
