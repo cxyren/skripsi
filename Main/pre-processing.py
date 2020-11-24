@@ -1,6 +1,5 @@
 import cv2
 import os
-import math
 import pandas as pd
 import numpy as np
 from glob import glob
@@ -110,7 +109,7 @@ def load_missing_file(path):
 
 skiprow = 0
 #preprocessing video from csv and convert into frame
-train = pd.read_csv('D:/user/Documents/Skripsi/Dataset/RGB.csv', skiprows=skiprow)
+train = pd.read_csv('D:/user/Documents/Skripsi/Dataset/fix/RGB_new.csv', skiprows=skiprow)
 train.columns = ['video']
 train_image = []
 
@@ -134,83 +133,75 @@ for i in tqdm(range(train.shape[0])):
     if not os.path.isfile(os.path.join(mp4_path, videoFile + '.mp4')):
         convert_avi_to_mp4(os.path.join(raw_path, videoFile + ".avi"),os.path.join(mp4_path, videoFile + ".mp4"))
     # capturing the video from the given path
-    cap = cv2.VideoCapture(os.path.join(mp4_path, videoFile + ".mp4")) 
-    #skeleton files
-    skeletonFile = videoFile.split('_')[0]
+    cap = cv2.VideoCapture(os.path.join(mp4_path, videoFile + ".mp4"))
     #check if skeleton file is missing or not
-    if skeletonFile in missing_files:
-        print('skeleton no %s is missing' % videoFile)
+    if videoFile.split('_')[0] in missing_files:
         continue
     #read skeleton file
-    bodyinfo = read_skeleton_file(os.path.join(skeleton_path, skeletonFile + '.skeleton'))
-    print('Frame count: %d\n' % len(bodyinfo))
+    bodyinfo = read_skeleton_file(os.path.join(skeleton_path, videoFile.split('_')[0] + '.skeleton'))
+    # print('Frame count: %d\n' % len(bodyinfo))
     for j in range(len(bodyinfo)): #jumlah frame
-        if cap.isOpened():
-            ret, frame = cap.read()
-            if ret != True:
-                break
-            if j % 6 == 0 :
-                for k in range(len(bodyinfo[j])): #jumlah body
-                    for l in range(int(bodyinfo[j][k]['jointCount'])):
-                        try:
-                            # red for line
-                            rv = 255
-                            gv = 0
-                            bv = 0
-                            #search for joint that connect
-                            m = connecting_joint[l] - 1
-                            #get joint x and y
-                            joint = bodyinfo[j][k]['joints'][l]
-                            dx = np.int32(round(float(joint['colorX'])))
-                            dy = np.int32(round(float(joint['colorY'])))
-                            joint2 = bodyinfo[j][k]['joints'][m]
-                            dx2 = np.int32(round(float(joint2['colorX'])))
-                            dy2 = np.int32(round(float(joint2['colorY'])))
-                            #get pixel for the line 
-                            line = bresenham_line(dx, dy, dx2, dy2)
-                            #write line per pixel
-                            for n in range(len(line)):
-                                dx = line[n][0]
-                                dy = line[n][1]
-                                frame = cv2.circle(frame, (dx, dy), radius=3, color=(bv, gv, rv), thickness=-1)
+        ret, frame = cap.read()
+        if ret != True:
+            break
+        if j % 15 == 0 :
+            for l in range(25):
+                try:
+                    # red for line
+                    rv = 255
+                    gv = 0
+                    bv = 0
+                    #search for joint that connect
+                    m = connecting_joint[l] - 1
+                    #get joint x and y
+                    joint = bodyinfo[j][0]['joints'][l]
+                    dx = np.int32(round(float(joint['colorX'])))
+                    dy = np.int32(round(float(joint['colorY'])))
+                    joint2 = bodyinfo[j][0]['joints'][m]
+                    dx2 = np.int32(round(float(joint2['colorX'])))
+                    dy2 = np.int32(round(float(joint2['colorY'])))
+                    #get pixel for the line 
+                    line = bresenham_line(dx, dy, dx2, dy2)
+                    #write line per pixel
+                    for n in range(len(line)):
+                        dx = line[n][0]
+                        dy = line[n][1]
+                        frame = cv2.circle(frame, (dx, dy), radius=2, color=(bv, gv, rv), thickness=-1)
 
-                            #green color for points/ joints
-                            rv = 0
-                            gv = 255
-                            bv = 0
-                            #get x and y
-                            joint = bodyinfo[j][k]['joints'][l]
-                            dx = np.int32(round(float(joint['colorX'])))
-                            dy = np.int32(round(float(joint['colorY'])))
-                            #write joint
-                            frame = cv2.circle(frame, (dx, dy), radius=5, color=(bv, gv, rv), thickness=-1)
-                        except:
-                            print("Skeleton is Broken AF")
-                            check = True
-                            break
-                    if check:
-                        break
-                if check:
+                    #green color for points/ joints
+                    rv = 0
+                    gv = 255
+                    bv = 0
+                    #get x and y
+                    joint = bodyinfo[j][0]['joints'][l]
+                    dx = np.int32(round(float(joint['colorX'])))
+                    dy = np.int32(round(float(joint['colorY'])))
+                    #write joint
+                    frame = cv2.circle(frame, (dx, dy), radius=5, color=(bv, gv, rv), thickness=-1)
+                except:
+                    # print("Skeleton is Broken AF")
+                    check = True
                     break
-                dest_path = 'D:/user/Documents/Skripsi/Dataset/train/'
-                filename = os.path.join(dest_path,  videoFile.split('_')[0] +"_frame%d.jpg" % j)
-                cv2.imwrite(filename, frame)
+            if check:
+                break
+            dest_path = 'C:/train_image/'
+            filename = os.path.join(dest_path,  videoFile.split('_')[0] +"_frame%d.jpg" % j)
+            frame = cv2.resize(frame, (224, 224))
+            cv2.imwrite(filename, frame)
     if check:
-        cap.release()
         continue
-    print("success processing video : %d" % (i + 1))
-    cap.release()
+    # print("success processing video : %d" % (i + 1))
 
 print('[INFO]PLACING LABEL INTO IMAGE...')
 # getting the names of all the images
-images = glob("D:/user/Documents/Skripsi/Dataset/train/*")
+images = glob("C:/train_image/*")
 name_class = pd.read_csv('D:/user/Documents/Skripsi/Dataset/class_name.csv', skiprows=skiprow)
 train_image = []
 train_class = []
 for i in tqdm(range(len(images))):
     # creating the image name
-    _nameimage = images[i].split('/')[5]
-    train_image.append(_nameimage[6:])
+    _nameimage = images[i].split('/')[1]
+    train_image.append(_nameimage[12:])
     # creating the class of image 
     _class = _nameimage.split('_')[0][-4:]
     for j in range(name_class.shape[0]):
@@ -225,6 +216,4 @@ train_data['class'] = train_class
 
 print('[INFO]SAVING INTO CSV...')
 # converting the dataframe into csv file 
-train_data.to_csv('D:/user/Documents/Skripsi/Dataset/train_new.csv',header=True, index=False)
-
-os.system("shutdown /s /t 1") 
+train_data.to_csv('D:/user/Documents/Skripsi/Dataset/fix/train_newest.csv',header=True, index=False)

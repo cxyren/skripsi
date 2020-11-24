@@ -2,8 +2,9 @@ import os
 import keras
 from keras.models import Model
 from keras.layers import Dense, Input, Dropout, Flatten, AveragePooling2D
-from keras.applications.resnet50 import ResNet50, preprocess_input
+from keras.applications.vgg16 import VGG16
 from keras.preprocessing.image import ImageDataGenerator
+from keras.callbacks import ModelCheckpoint, EarlyStopping
 from keras.optimizers import Adam
 import cv2
 import numpy as np
@@ -12,79 +13,77 @@ import matplotlib.pyplot as plt
 from tqdm import tqdm
 from sklearn.preprocessing import LabelBinarizer
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import confusion_matrix, accuracy_score, classification_report
+from sklearn.metrics import accuracy_score, classification_report
 from sklearn import metrics
 import pickle
 import gc
 
 #initialize
-num_epochs = 2
-num_split = 0
-batchsize = 32
-weight_final = 'modelActivity01.model'
-lb_file = 'lb01.pickle'
-plt_file = 'plot01.png'
-numpy_file = 'x01.npy'
-label_path = 'y01.npy'
+learn_rate = 1e-3
+num_epochs = 25 #pengujian
+batchsize = 8
+drop_out = 0.2 #pengujian juga kalo bisa
+weight_final = 'modelActivity03.h5'
+lb_file = 'lb03.pickle'
+plt_file = 'plot03.png'
+summary_file = 'report03.txt'
+classification_report_file = 'classification03.txt'
 
-#training
-train = pd.read_csv('D:/user/Documents/Skripsi/Dataset/train_1.csv')
+#training data
+train = pd.read_csv('D:/user/Documents/Skripsi/Dataset/fix/train_newest.csv')
 
 #path
-image_path = 'D:/user/Documents/Skripsi/Dataset/train/'
+image_path =  'C:/train_image/' #'D:/user/Documents/Skripsi/Dataset/train/'
 model_path = 'D:/user/Documents/Skripsi/Model/'
-plt_path = 'D:/user/Documents/Skripsi/Hasil Tes/'
-numpy_path = 'D:/user/Documents/Skripsi/Dataset/'
+report_path = 'D:/user/Documents/Skripsi/Hasil Tes/'
+check_path = 'D:/user/Documents/Skripsi/checkpoint/'
 
 # creating an empty list
 train_image = []
 label = []
 
+print("[INFO] load image ...")
 for i in tqdm(range(train.shape[0])):
     if not train['class'][i]:
         continue
     # loading the image and keeping the target size as (224,224,3)
     img = cv2.imread(os.path.join(image_path, train['image'][i]))
-    # converting it to array
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    img = cv2.resize(img, (224, 224))
+    img = cv2.resize(img, (150, 150))
     # appending the image to the train_image list
     train_image.append(img)
     label.append(train['class'][i])
     del img 
-    gc.collect()
 del train
-del gc.garbage[:] 
 
 # converting the list to numpy array
 X = np.array(train_image)
 
-X.save(os.path.join(numpy_path, numpy_file))
-
 # separating the target
 y = np.array(label)
-
-y.save(os.path.join(numpy_path, label_path))
 
 # perform one-hot encoding on the labels
 lb = LabelBinarizer()
 y = lb.fit_transform(y)
 
+print("[INFO] Splitting data ...")
 # creating the training and validation set
 trainX, testX, trainY, testY = train_test_split(X, y, random_state=42, test_size=0.25, stratify = y)
 
+#release memory
 del X
 del y
 gc.collect()
 del gc.garbage[:] 
 
+print("[INFO] initialize training data augmentation ...")
 #initialize the training data augmentation object
 train_aug = ImageDataGenerator(
-    rotation_range = 30,
+    rotation_range = 40,
     width_shift_range = 0.2,
     height_shift_range = 0.2,
-    shear_range = 0.15,
-    zoom_range = 0.15,
+    shear_range = 0.2,
+    zoom_range = 0.2,
     fill_mode = 'nearest'
     )
 train_batches = train_aug.flow(trainX, trainY, batch_size=batchsize)
@@ -93,55 +92,69 @@ train_batches = train_aug.flow(trainX, trainY, batch_size=batchsize)
 val_aug = ImageDataGenerator()
 val_batches = val_aug.flow(testX, testY, batch_size=batchsize)
 
-#load ResNet-50 network
-baseModel = ResNet50(
-    weights='imagenet',
-    include_top=False, 
-    input_tensor=Input(shape=(224,224,3))
-    )
+print("[INFO] load vgg16 model ...")
+#load VGG16 network
+baseModel = VGG16(weights='imagenet',include_top=True)
 
-# construct the head of model
+print("[INFO] adding callbacks ...")
+# add callbacks for model
+model_callbacks =[
+    #for earlystoping
+    EarlyStopping(monitor='val_accuracy', min_delta=0, patience=40, verbose=1, mode='auto'),
+    #for check point
+    ModelCheckpoint(filepath=os.path.join(check_path, 'model.{epoch:02d}-{val_loss:.2f}.h5'), monitor='val_loss', verbose=1, save_best_only=False, save_weights_only=False, mode='auto', save_freq='epoch', options=None)
+] 
+
+print("[INFO] configure fully connected layer ...")
+# fullly connected layer configuration
 headModel = baseModel.output
 headModel = AveragePooling2D(pool_size=(7, 7))(headModel)
 headModel = Flatten(name='flatten')(headModel)
 headModel = Dense(512, activation='relu')(headModel)
-headModel = Dropout(0.5)(headModel)
+headModel = Dropout(drop_out)(headModel) #coba
 headModel = Dense(len(lb.classes_), activation='softmax')(headModel)
 
-#place head model on top of base model
+print("[INFO] setting up model ...")
+#setting up model
 model = Model(inputs=baseModel.input, outputs=headModel)
 
 # loop over all layers in the base model and freeze them so they wont be updated during the training process
 for layer in baseModel.layers:
     layer.trainable = False
 
-model.summary()
+print("[INFO] writing summary ...")
+# Open the file
+with open(os.path.join(report_path, summary_file),'w') as fh:
+    # Pass the file handle in as a lambda function to make it callable
+    model.summary(print_fn=lambda x: fh.write(x + '\n'))
 
-# compile our model (this needs to be done after our setting our layers to being non-trainable)
-print("[INFO] compiling model...")
-model.compile(optimizer=Adam(lr=1e-3, final_lr=0.1), loss='categorical_crossentropy', metrics=['accuracy'])
+print("[INFO] compiling ...")
+# compile model
+model.compile(optimizer=Adam(learning_rate=learn_rate), loss='categorical_crossentropy', metrics=['accuracy'])
 
-
+print("[INFO] training ...")
 #train the head of the network for a few epochs (all other layers are frozen) -- this will allow the new FC layers to start to become initialized with actual "learned" values versus pure random
-print("[INFO] training head...")
 H = model.fit(
     x=train_batches, 
     steps_per_epoch=len(trainX) // batchsize,
     validation_data=val_batches,
     validation_steps=len(testX) // batchsize,
-    epochs=num_epochs
+    epochs=num_epochs,
+    callbacks=model_callbacks
     )
 
+print("[INFO] evaluating ...")
 # evaluate the network
-print("[INFO] evaluating network...")
 predictions = model.predict(x=testX.astype('float32'), batch_size=batchsize)
-print("confusion Metrix"),
-print(confusion_matrix(testY.argmax(axis=1), predictions.argmax(axis=1)))
+report = classification_report(testY.argmax(axis=1), predictions.argmax(axis=1), target_names=lb.classes_)
 print("classification report"),
-print(classification_report(testY.argmax(axis=1), predictions.argmax(axis=1), target_names=lb.classes_))
+print(report)
+df = pd.DataFrame(report).transpose()
+df.to_csv(os.path.join())
 score = model.evaluate(val_batches, steps=100, verbose=1)
 print("Accuracy is %s " % (score[1]*100))
 
+print("[INFO] making plot for loss and accuracy...")
 # plot the training loss and accuracy
 plt.style.use('ggplot')
 plt.figure()
@@ -153,15 +166,17 @@ plt.title("Training Loss and Accuracy on Dataset")
 plt.xlabel("Epoch #")
 plt.ylabel("Loss/Accuracy")
 plt.legend(loc="lower left")
-plt.savefig(os.path.join(plt_path, plt_file))
+plt.savefig(os.path.join(report_path, plt_file))
 
-print("[INFO] serializing network...")
-model.save(os.path.join(model_path, weight_final), save_format="h5")
+print("[INFO] saving weight ...")
+model.save(os.path.join(model_path, weight_final))
 
+print("[INFO] saving label ...")
 # serialize the label binarizer to disk
 f = open(os.path.join(model_path, lb_file), "wb")
 f.write(pickle.dumps(lb))
 f.close()
 
+print("[INFO] Done ...")
 gc.collect()
 del gc.garbage[:] 
