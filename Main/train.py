@@ -1,5 +1,4 @@
 import os
-import keras
 from keras.models import Model
 from keras.layers import Dense, Input, Dropout, Flatten, AveragePooling2D
 from keras.applications.vgg16 import VGG16
@@ -17,15 +16,31 @@ from sklearn.metrics import accuracy_score, classification_report
 from sklearn import metrics
 import pickle
 import gc
+import tensorflow as tf
+
+os.environ["CUDA_VISIBLE_DEVICES"]="0"
+
+physical_devices = tf.config.list_physical_devices('GPU')
+try:
+    # Disable first GPU
+    tf.config.set_visible_devices(physical_devices[1:], 'GPU')
+    tf.config.experimental.set_memory_growth(physical_devices[0], True)
+    logical_devices = tf.config.list_logical_devices('GPU')
+    # Logical device was not created for first GPU
+    assert len(logical_devices) == len(physical_devices) - 1
+except:
+  # Invalid device or cannot modify virtual devices once initialized.
+  pass
 
 #initialize
 learn_rate = 1e-3
 num_epochs = 25 #pengujian
-batchsize = 8
+batchsize = 6
 drop_out = 0.2 #pengujian juga kalo bisa
 weight_final = 'modelActivity03.h5'
 lb_file = 'lb03.pickle'
-plt_file = 'plot03.png'
+loss_file = 'lossplot03.png'
+acc_file = 'accplot03.png'
 summary_file = 'report03.txt'
 classification_report_file = 'classification03.txt'
 
@@ -76,25 +91,25 @@ del y
 gc.collect()
 del gc.garbage[:] 
 
-print("[INFO] initialize training data augmentation ...")
+# print("[INFO] initialize training data augmentation ...")
 #initialize the training data augmentation object
-train_aug = ImageDataGenerator(
-    rotation_range = 40,
-    width_shift_range = 0.2,
-    height_shift_range = 0.2,
-    shear_range = 0.2,
-    zoom_range = 0.2,
-    fill_mode = 'nearest'
-    )
-train_batches = train_aug.flow(trainX, trainY, batch_size=batchsize)
+# train_aug = ImageDataGenerator(
+#     rotation_range = 30, 
+#     width_shift_range = 0.2, 
+#     height_shift_range = 0.2, 
+#     shear_range = 0.15, 
+#     zoom_range = 0.15, 
+#     fill_mode = 'nearest' 
+#     )
+# train_batches = train_aug.flow(trainX, trainY, batch_size=batchsize)
 
 #initialize the validation/testing data augmentation
-val_aug = ImageDataGenerator()
-val_batches = val_aug.flow(testX, testY, batch_size=batchsize)
+# val_aug = ImageDataGenerator()
+# val_batches = val_aug.flow(testX, testY, batch_size=batchsize)
 
 print("[INFO] load vgg16 model ...")
 #load VGG16 network
-baseModel = VGG16(weights='imagenet',include_top=True)
+baseModel = VGG16(weights='imagenet',include_top=False, input_shape=(150, 150, 3))
 
 print("[INFO] adding callbacks ...")
 # add callbacks for model
@@ -102,14 +117,14 @@ model_callbacks =[
     #for earlystoping
     EarlyStopping(monitor='val_accuracy', min_delta=0, patience=40, verbose=1, mode='auto'),
     #for check point
-    ModelCheckpoint(filepath=os.path.join(check_path, 'model.{epoch:02d}-{val_loss:.2f}.h5'), monitor='val_loss', verbose=1, save_best_only=False, save_weights_only=False, mode='auto', save_freq='epoch', options=None)
+    ModelCheckpoint(filepath=os.path.join(check_path, 'model.{epoch:02d}-{val_loss:.2f}.h5'), monitor='val_loss', verbose=1, save_best_only=False, save_weights_only=False, mode='auto')
 ] 
 
 print("[INFO] configure fully connected layer ...")
 # fullly connected layer configuration
 headModel = baseModel.output
-headModel = AveragePooling2D(pool_size=(7, 7))(headModel)
-headModel = Flatten(name='flatten')(headModel)
+headModel = AveragePooling2D(pool_size=(2, 2))(headModel)
+headModel = Flatten(input_shape=baseModel.output_shape[1:])(headModel)
 headModel = Dense(512, activation='relu')(headModel)
 headModel = Dropout(drop_out)(headModel) #coba
 headModel = Dense(len(lb.classes_), activation='softmax')(headModel)
@@ -132,12 +147,15 @@ print("[INFO] compiling ...")
 # compile model
 model.compile(optimizer=Adam(learning_rate=learn_rate), loss='categorical_crossentropy', metrics=['accuracy'])
 
+gc.collect()
+del gc.garbage[:] 
+
 print("[INFO] training ...")
 #train the head of the network for a few epochs (all other layers are frozen) -- this will allow the new FC layers to start to become initialized with actual "learned" values versus pure random
 H = model.fit(
-    x=train_batches, 
+    trainX, trainY,
     steps_per_epoch=len(trainX) // batchsize,
-    validation_data=val_batches,
+    validation_data=(testX, testY),
     validation_steps=len(testX) // batchsize,
     epochs=num_epochs,
     callbacks=model_callbacks
@@ -156,17 +174,26 @@ print("Accuracy is %s " % (score[1]*100))
 
 print("[INFO] making plot for loss and accuracy...")
 # plot the training loss and accuracy
+#loss
 plt.style.use('ggplot')
 plt.figure()
 plt.plot(np.arange(0, num_epochs), H.history["loss"], label="train_loss")
 plt.plot(np.arange(0, num_epochs), H.history["val_loss"], label="val_loss")
+plt.title("Training Loss on Dataset")
+plt.xlabel("Epoch #")
+plt.ylabel("Loss")
+plt.legend(loc="lower left")
+plt.savefig(os.path.join(report_path, loss_file))
+#accuracy
+plt.style.use('ggplot')
+plt.figure()
 plt.plot(np.arange(0, num_epochs), H.history["accuracy"], label="train_acc")
 plt.plot(np.arange(0, num_epochs), H.history["val_accuracy"], label="val_acc")
-plt.title("Training Loss and Accuracy on Dataset")
+plt.title("Training Accuracy on Dataset")
 plt.xlabel("Epoch #")
-plt.ylabel("Loss/Accuracy")
+plt.ylabel("Accuracy")
 plt.legend(loc="lower left")
-plt.savefig(os.path.join(report_path, plt_file))
+plt.savefig(os.path.join(report_path, acc_file))
 
 print("[INFO] saving weight ...")
 model.save(os.path.join(model_path, weight_final))
