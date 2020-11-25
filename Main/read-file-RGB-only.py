@@ -5,21 +5,27 @@ from sklearn.model_selection import train_test_split
 
 video = glob("D:/user/Documents/Skripsi/Dataset/RGB-raw/nturgb+d_rgb/*")
 class_name = pd.read_csv('D:/user/Documents/Skripsi/Dataset/class_name.csv')
+setup_num = dict()
+setup_num['S003'] = True
+setup_num['S004'] = True
+setup_num['S005'] = True
+setup_num['S006'] = True
+setup_num['S008'] = True
+setup_num['S009'] = True
 video_name = []
 name_class = []
 
 for i in tqdm(range(len(video))):
     name = video[i].split('/')[6]
     name = name[13:]
-    for j in range(class_name.shape[0]):
-        if(name.split('_')[0][-4:] == class_name['code'][j]):
-            video_name.append(name)
-            name_class.append(class_name['code'][j])
-            break
-
-trainX, testX, trainY, testY = train_test_split(video_name, name_class, random_state=42, test_size=0.3, stratify = name_class)
+    if name.split('_')[0][:4] in setup_num:
+        for j in range(class_name.shape[0]):
+            if name.split('_')[0][-4:] == class_name['code'][j]:
+                video_name.append(name)
+                name_class.append(class_name['code'][j])
+                break
 
 df = pd.DataFrame()
-df['video'] = trainX
+df['video'] = video_name
 
-df.to_csv('D:/user/Documents/Skripsi/Dataset/fix/RGB_new.csv',header=True, index=False)
+df.to_csv('D:/user/Documents/Skripsi/Dataset/fix/RGB_newest.csv',header=True, index=False)
