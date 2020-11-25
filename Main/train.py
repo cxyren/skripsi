@@ -16,36 +16,21 @@ from sklearn.metrics import accuracy_score, classification_report
 from sklearn import metrics
 import pickle
 import gc
-# import tensorflow as tf
-
-# tf.config.experimental.set_visible_devices([], 'GPU')
-# # tf.device('/cpu:0')
-
-# physical_devices = tf.config.list_physical_devices('CPU')
-# try:
-#     # Disable first GPU
-#     tf.config.set_visible_devices(physical_devices, 'CPU')
-#     logical_devices = tf.config.list_logical_devices('CPU')
-#     # Logical device was not created for first GPU
-#     assert len(logical_devices) == len(physical_devices) - 1
-# except:
-#   # Invalid device or cannot modify virtual devices once initialized.
-#   pass
 
 #initialize
 learn_rate = 1e-3
 num_epochs = 25 #pengujian
 batchsize = 8
 drop_out = 0.2 #pengujian juga kalo bisa
-weight_final = 'modelActivity03.h5'
-lb_file = 'lb03.pickle'
-loss_file = 'lossplot03.png'
-acc_file = 'accplot03.png'
-summary_file = 'report03.txt'
-classification_report_file = 'classification03.txt'
+weight_final = 'modelActivity04.h5'
+lb_file = 'lb04.pickle'
+loss_file = 'lossplot04.png'
+acc_file = 'accplot04.png'
+summary_file = 'report04.txt'
+classification_report_file = 'classification04.txt'
 
 #training data
-train = pd.read_csv('D:/user/Documents/Skripsi/Dataset/fix/train_newest2.csv')
+train = pd.read_csv('D:/user/Documents/Skripsi/Dataset/fix/train_newest3.csv')
 
 #path
 image_path =  'C:/train_image2/' #'D:/user/Documents/Skripsi/Dataset/train/'
@@ -64,7 +49,7 @@ for i in tqdm(range(train.shape[0])):
     # loading the image and keeping the target size as (224,224,3)
     img = cv2.imread(os.path.join(image_path, train['image'][i]))
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    img = cv2.resize(img, (150, 150))
+    img = cv2.resize(img, (224, 224))
     # appending the image to the train_image list
     train_image.append(img)
     label.append(train['class'][i])
@@ -91,34 +76,18 @@ del y
 gc.collect()
 del gc.garbage[:] 
 
-print("[INFO] initialize training data augmentation ...")
-#initialize the training data augmentation object
-train_aug = ImageDataGenerator(
-    rotation_range = 30, 
-    width_shift_range = 0.2, 
-    height_shift_range = 0.2, 
-    shear_range = 0.15, 
-    zoom_range = 0.15, 
-    fill_mode = 'nearest' 
-    )
-train_batches = train_aug.flow(trainX, trainY, batch_size=batchsize)
-
-# initialize the validation/testing data augmentation
-val_aug = ImageDataGenerator()
-val_batches = val_aug.flow(testX, testY, batch_size=batchsize)
-
 print("[INFO] load vgg16 model ...")
 #load VGG16 network
-baseModel = VGG16(weights='imagenet',include_top=False, input_shape=(150, 150, 3))
+baseModel = VGG16(weights='imagenet',include_top=False, input_shape=(224, 224, 3))
 
-# print("[INFO] adding callbacks ...")
-# # add callbacks for model
-# model_callbacks =[
-#     #for earlystoping
-#     EarlyStopping(monitor='val_accuracy', min_delta=0, patience=40, verbose=1, mode='auto'),
-#     #for check point
-#     ModelCheckpoint(filepath=os.path.join(check_path, 'model.{epoch:02d}-{val_loss:.2f}.h5'), monitor='val_loss', verbose=1, save_best_only=False, save_weights_only=False, mode='auto')
-# ] 
+print("[INFO] adding callbacks ...")
+# add callbacks for model
+model_callbacks =[
+    #for earlystoping
+    EarlyStopping(monitor='val_accuracy', min_delta=0, patience=40, verbose=1, mode='auto'),
+    #for check point
+    ModelCheckpoint(filepath=os.path.join(check_path, 'model.{epoch:02d}-{val_loss:.2f}.h5'), monitor='val_loss', verbose=1, save_best_only=False, save_weights_only=False, mode='auto')
+] 
 
 print("[INFO] configure fully connected layer ...")
 # fullly connected layer configuration
@@ -153,12 +122,12 @@ del gc.garbage[:]
 print("[INFO] training ...")
 #train the head of the network for a few epochs (all other layers are frozen) -- this will allow the new FC layers to start to become initialized with actual "learned" values versus pure random
 H = model.fit(
-    x=train_aug, 
+    x=trainX,
+    y=trainY,
     batch_size=batchsize,
-    steps_per_epoch=len(trainX) // batchsize,
-    validation_data=val_aug,
-    validation_steps=len(testX) // batchsize,
-    epochs=num_epochs
+    validation_data=(testX,testY),
+    epochs=num_epochs,
+    callbacks=model_callbacks
     )
 
 print("[INFO] evaluating ...")
