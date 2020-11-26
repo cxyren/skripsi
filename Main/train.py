@@ -92,7 +92,7 @@ model_callbacks =[
 print("[INFO] configure fully connected layer ...")
 # fullly connected layer configuration
 headModel = baseModel.output
-headModel = AveragePooling2D(pool_size=(2, 2))(headModel)
+# headModel = AveragePooling2D(pool_size=(2, 2))(headModel)
 headModel = Flatten(input_shape=baseModel.output_shape[1:])(headModel)
 headModel = Dense(512, activation='relu')(headModel)
 headModel = Dropout(drop_out)(headModel) #coba

@@ -15,25 +15,27 @@ output_path = ''
 output_video = ''
 size = 128
 
-# load the trained model and label binarizer from disk
-print("[INFO] loading model and label binarizer...")
+# load the trained model and label from disk
+print("[INFO] loading model and label ...")
 model = load_model(os.path.join(model_path, model_file))
 lb = pickle.loads(open(os.path.join(model_path, label_file), "rb").read())
 
 Q = deque(maxlen=size)
 
-vs = cv2.VideoCapture(os.path.join(input_path, input_video))
+# load video
+print("[INFO] load video ...")
+videocap = cv2.VideoCapture(os.path.join(input_path, input_video))
 writer = None
 (W, H) = (None, None)
 
 # loop over frames from the video file stream
+print("[INFO] loop over frames ...")
 while True:
 	# read the next frame from the file
-	(grabbed, frame) = vs.read()
+	(ret, frame) = videocap.read()
 
-	# if the frame was not grabbed, then we have reached the end
-	# of the stream
-	if not grabbed:
+	# if the frame was not grabbedm then break
+	if not ret:
 		break
 
 	# if the frame dimensions are empty, grab them
@@ -46,7 +48,6 @@ while True:
 	output = frame.copy()
 	frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 	frame = cv2.resize(frame, (224, 224)).astype("float32")
-	frame -= mean
 
 	# make predictions on the frame and then update the predictions
 	# queue
@@ -85,4 +86,4 @@ while True:
 # release the file pointers
 print("[INFO] cleaning up...")
 writer.release()
-vs.release()
+videocap.release()
