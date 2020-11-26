@@ -27,26 +27,11 @@ if gpus:
 	except RuntimeError as e:
 		print(e)
 
-def classification_report_csv(report):
-    report_data = []
-    lines = report.split('\n')
-    for line in lines[2:-3]:
-        row = {}
-        row_data = line.split('      ')
-        row['class'] = row_data[0]
-        row['precision'] = row_data[1]
-        row['recall'] = row_data[2]
-        row['f1_score'] = row_data[3]
-        row['support'] = row_data[4]
-        report_data.append(row)
-    dataframe = pd.DataFrame.from_dict(report_data)
-    dataframe.to_csv(os.path.join(report_path, classification_report_file), index = False)
-
 #initialize
-num_train = 4
+num_train = 1
 learn_rate = 1e-3
-num_epochs = 1 #pengujian
-batchsize = 8
+num_epochs = 25 #pengujian
+batchsize = 10
 drop_out = 0.4 #pengujian juga kalo bisa
 
 # weight_previous= 'modelActivity%02i.h5' % (num_train - 1)
@@ -174,12 +159,11 @@ H = model.fit(
 print("[INFO] evaluating ...")
 # evaluate the network
 predictions = model.predict(x=testX.astype('float32'), batch_size=batchsize)
-report = classification_report(testY.argmax(axis=1), predictions.argmax(axis=1), target_names=lb.classes_)
+report = classification_report(testY.argmax(axis=1), predictions.argmax(axis=1), target_names=lb.classes_, output_dict=True)
 print("classification report"),
 print(report)
-classification_report_csv(report)
-score = model.evaluate(val_batches, steps=100, verbose=1)
-print("Accuracy is %s " % (score[1]*100))
+df = pd.DataFrame(report).transpose()
+df.to_csv(os.path.join(report_path, classification_report_file), index = False)
 
 print("[INFO] making plot for loss and accuracy...")
 # plot the training loss and accuracy
