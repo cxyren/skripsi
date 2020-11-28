@@ -42,7 +42,7 @@ if gpu:
 num_train = 10
 learn_rate = 1e-3
 num_epochs = 25 #pengujian
-batchsize = 12
+batchsize = 16
 drop_out = 0.3 #pengujian juga kalo bisa
 
 #file to save
@@ -55,11 +55,8 @@ configure_file = 'config%02i.txt' % num_train
 acc_n_loss_file = 'history%02i.csv' % num_train
 classification_report_file = 'classification%02i.csv' % num_train
 
-#training data
-train = pd.read_csv('D:/user/Documents/Skripsi/Dataset/fix/train_newest4.csv')
-
 #path
-image_path =  'C:/train_image/' 
+data_path = 'C:/train/'
 model_path = 'D:/user/Documents/Skripsi/Model/'
 report_path = 'D:/user/Documents/Skripsi/Hasil Tes/'
 check_path = 'D:/user/Documents/Skripsi/checkpoint/'
@@ -73,38 +70,19 @@ f.write('Drop Out : %f\n' % drop_out)
 f.write('Start time: %s\n' % datetime.datetime.now() )
 f.close()
 
-# creating empty list
-train_image = []
-label = []
-
-#load image
-print("[INFO] load image ...")
-for i in tqdm(range(train.shape[0])):
-    if not train['class'][i]:
-        continue
-    # loading the image and resize to 224x224 and rgb
-    img = cv2.imread(os.path.join(image_path, train['image'][i]))
-    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    img = cv2.resize(img, (224, 224))
-    # appending the image and the label into the list
-    train_image.append(img)
-    label.append(train['class'][i])
-    del img 
-del train
+#load pickle of image and label
+X = pickle.loads(open(os.path.join(data_path, 'x.pickle'), "rb").read())
+y = pickle.loads(open(os.path.join(data_path, 'y.pickle'), "rb").read())
 
 # converting the list of image to numpy array
-X = np.array(train_image)
+X = np.array(X)
 
 # converting the list of label to numpy array
-y = np.array(label)
+y = np.array(y)
 
 # perform one-hot encoding on the labels
 lb = LabelBinarizer()
 y = lb.fit_transform(y)
-
-# # splitting the training and validation data
-# print("[INFO] Splitting data ...")
-# trainX, testX, trainY, testY = train_test_split(X, y, random_state=42, test_size=0.25, stratify = y)
 
 # #release memory
 # del X
