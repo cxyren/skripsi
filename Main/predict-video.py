@@ -6,13 +6,15 @@ import cv2
 import os
 
 #initialize
+num_model = 1
+count = 1
 model_path = 'D:/user/Documents/Skripsi/Model/'
-model_file = 'modelActivity01.model'
-label_file = 'lb.pickle'
-input_path = ''
-input_video = ''
-output_path = ''
-output_video = ''
+model_file = 'modelActivity%02i.model' % num_model
+label_file = 'lb%02i.pickle' % num_model
+input_path = 'D:/user/Documents/Skripsi/Input/'
+input_skeleton = ''
+output_path = 'D:/user/Documents/Skripsi/Output/'
+output_video = 'Output%02i.avi' % count
 size = 128
 
 # load the trained model and label from disk
@@ -23,7 +25,7 @@ lb = pickle.loads(open(os.path.join(model_path, label_file), "rb").read())
 Q = deque(maxlen=size)
 
 # load video
-print("[INFO] load video ...")
+print("[INFO] load skeleton ...")
 videocap = cv2.VideoCapture(os.path.join(input_path, input_video))
 writer = None
 (W, H) = (None, None)

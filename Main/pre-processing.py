@@ -109,7 +109,7 @@ def load_missing_file(path):
 
 skiprow = 0
 #preprocessing video from csv and convert into frame
-train = pd.read_csv('D:/user/Documents/Skripsi/Dataset/fix/RGB_newest.csv', skiprows=skiprow)
+train = pd.read_csv('D:/user/Documents/Skripsi/Dataset/fix/RGB_newest2.csv', skiprows=skiprow)
 train.columns = ['video']
 train_image = []
 
@@ -117,7 +117,7 @@ raw_path = 'D:/user/Documents/Skripsi/Dataset/RGB-raw/nturgb+d_rgb/'
 mp4_path = 'D:/user/Documents/Skripsi/Dataset/RGB-mp4/'
 skeleton_path = 'D:/user/Documents/Skripsi/Dataset/ntu-skeleton/skeletons/'
 missing_skeleton_path = 'D:/user/Documents/Skripsi/Dataset/ntu_rgbd_missings.txt'
-dest_path = 'C:/train_image2/'
+dest_path = 'C:/train_image/'
 
 connecting_joint = [2, 1, 21, 3, 21, 5, 6, 7, 21, 9, 10, 11, 1, 13, 14, 15, 1, 17, 18, 19, 2, 8, 8, 12, 12]
 
@@ -143,6 +143,8 @@ for i in tqdm(range(train.shape[0])):
     # print('Frame count: %d\n' % len(bodyinfo))
     for j in range(len(bodyinfo)): #jumlah frame
         ret, frame = cap.read()
+        color = tuple(reversed([0,0,0]))
+        frame[:] = color
         if ret != True:
             break
         if j % 15 == 0 :
@@ -186,7 +188,7 @@ for i in tqdm(range(train.shape[0])):
             if check:
                 break
             filename = os.path.join(dest_path,  videoFile.split('_')[0] +"_frame%d.jpg" % j)
-            frame = cv2.resize(frame, (int(frame.shape[1] * 0.4), int(frame.shape[0] * 0.4)))
+            frame = cv2.resize(frame, (int(frame.shape[1] * 0.3), int(frame.shape[0] * 0.3)))
             cv2.imwrite(filename, frame)
     if check:
         continue
@@ -195,17 +197,23 @@ for i in tqdm(range(train.shape[0])):
 print('[INFO]PLACING LABEL INTO IMAGE...')
 # getting the names of all the images
 images = glob(os.path.join(dest_path, '*'))
-name_class = pd.read_csv('D:/user/Documents/Skripsi/Dataset/class_name.csv', skiprows=skiprow)
+name_class = pd.read_csv('D:/user/Documents/Skripsi/Dataset/class_name_new.csv', skiprows=skiprow)
 train_image = []
 train_class = []
+
+class_count = [0]*name_class.shape[0] 
 for i in tqdm(range(len(images))):
     # creating the image name
     _nameimage = images[i].split('/')[1]
-    train_image.append(_nameimage[13:])
     # creating the class of image 
     _class = _nameimage.split('_')[1][-4:]
     for j in range(name_class.shape[0]):
+        if class_count[j] > 1471:
+            break
         if _class == name_class['code'][j]:
+            class_count[j] = class_count[j] + 1
+            
+            train_image.append(_nameimage[12:])
             train_class.append(name_class['name'][j])
             break
     
@@ -216,4 +224,4 @@ train_data['class'] = train_class
 
 print('[INFO]SAVING INTO CSV...')
 # converting the dataframe into csv file 
-train_data.to_csv('D:/user/Documents/Skripsi/Dataset/fix/train_newest2.csv', header=True, index=False)
+train_data.to_csv('D:/user/Documents/Skripsi/Dataset/fix/train_newest4.csv', header=True, index=False)

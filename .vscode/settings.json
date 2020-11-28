@@ -1,4 +1,4 @@
 {
-    "python.pythonPath": "C:\\Users\\cxyre\\anaconda3\\python.exe",
+    "python.pythonPath": "C:\\Users\\cxyre\\anaconda3\\envs\\tensorflow_env\\python.exe",
     "git.ignoreLimitWarning": true
 }

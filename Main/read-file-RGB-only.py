@@ -4,7 +4,7 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 
 video = glob("D:/user/Documents/Skripsi/Dataset/RGB-raw/nturgb+d_rgb/*")
-class_name = pd.read_csv('D:/user/Documents/Skripsi/Dataset/class_name.csv')
+class_name = pd.read_csv('D:/user/Documents/Skripsi/Dataset/class_name_new.csv')
 setup_num = dict()
 setup_num['S003'] = True
 setup_num['S004'] = True
@@ -15,12 +15,16 @@ setup_num['S009'] = True
 video_name = []
 name_class = []
 
+class_count = [0]*class_name.shape[0] 
 for i in tqdm(range(len(video))):
     name = video[i].split('/')[6]
     name = name[13:]
     if name.split('_')[0][:4] in setup_num:
         for j in range(class_name.shape[0]):
             if name.split('_')[0][-4:] == class_name['code'][j]:
+                if class_count[j] > 1471:
+                    break
+                class_count[j] = class_count[j] + 1
                 video_name.append(name)
                 name_class.append(class_name['code'][j])
                 break
@@ -28,4 +32,4 @@ for i in tqdm(range(len(video))):
 df = pd.DataFrame()
 df['video'] = video_name
 
-df.to_csv('D:/user/Documents/Skripsi/Dataset/fix/RGB_newest.csv',header=True, index=False)
+df.to_csv('D:/user/Documents/Skripsi/Dataset/fix/RGB_newest2.csv',header=True, index=False)
