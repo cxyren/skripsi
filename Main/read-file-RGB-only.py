@@ -15,16 +15,12 @@ setup_num['S009'] = True
 video_name = []
 name_class = []
 
-class_count = [0]*class_name.shape[0] 
 for i in tqdm(range(len(video))):
     name = video[i].split('/')[6]
     name = name[13:]
     if name.split('_')[0][:4] in setup_num:
         for j in range(class_name.shape[0]):
             if name.split('_')[0][-4:] == class_name['code'][j]:
-                if class_count[j] > 1471:
-                    break
-                class_count[j] = class_count[j] + 1
                 video_name.append(name)
                 name_class.append(class_name['code'][j])
                 break

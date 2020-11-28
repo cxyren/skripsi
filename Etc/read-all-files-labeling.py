@@ -20,7 +20,6 @@ for i in tqdm(range(len(images))):
     # creating the class of image 
     _class = _nameimage.split('_')[1][-4:]
     for j in range(name_class.shape[0]):
-        
         if _class == name_class['code'][j]:
             if class_count[j] > 1471:
                 break

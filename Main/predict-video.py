@@ -45,8 +45,7 @@ while True:
 		(H, W) = frame.shape[:2]
 
 	# clone the output frame, then convert it from BGR to RGB
-	# ordering, resize the frame to a fixed 224x224, and then
-	# perform mean subtraction
+	# ordering, resize the frame to a fixed 224x224
 	output = frame.copy()
 	frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 	frame = cv2.resize(frame, (224, 224)).astype("float32")

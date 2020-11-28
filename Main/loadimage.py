@@ -1,4 +1,5 @@
 import pandas as pd
+from tqdm import tqdm
 import os
 import cv2
 import pickle

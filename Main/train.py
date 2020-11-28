@@ -39,7 +39,7 @@ if gpu:
 		print(e)
 
 #initialize
-num_train = 10
+num_train = 13
 learn_rate = 1e-3
 num_epochs = 25 #pengujian
 batchsize = 16
@@ -70,6 +70,7 @@ f.write('Drop Out : %f\n' % drop_out)
 f.write('Start time: %s\n' % datetime.datetime.now() )
 f.close()
 
+print("[INFO] load image ...")
 #load pickle of image and label
 X = pickle.loads(open(os.path.join(data_path, 'x.pickle'), "rb").read())
 y = pickle.loads(open(os.path.join(data_path, 'y.pickle'), "rb").read())
@@ -99,7 +100,7 @@ print("[INFO] adding callbacks ...")
 time_callbacks = TimeHistory()
 model_callbacks =[
     #for earlystoping
-    EarlyStopping(monitor='val_accuracy', min_delta=0, patience=100, verbose=1, mode='auto'),
+    EarlyStopping(monitor='val_accuracy', min_delta=0, patience=40, verbose=1, mode='auto'),
     #for check point
     ModelCheckpoint(filepath=os.path.join(check_path, 'model.{epoch:02d}-{val_loss:.2f}.h5'), monitor='val_loss', verbose=1, save_best_only=False, save_weights_only=False, mode='auto'),
     #for record time
@@ -144,6 +145,7 @@ H = model.fit(
     y=y,
     batch_size=batchsize,
     validation_split=0.25,
+    shuffle=True,
     epochs=num_epochs,
     callbacks=model_callbacks
     )
@@ -182,7 +184,7 @@ plt.savefig(os.path.join(report_path, acc_file))
 #save history
 df = pd.DataFrame()
 df['accuracy'] = H.history['accuracy']
-df['val_accuracy'] = H.history['accuracy']
+df['val_accuracy'] = H.history['val_accuracy']
 df['loss'] = H.history['loss']
 df['val_loss'] = H.history['val_loss']
 df['time'] = time_callbacks.times
