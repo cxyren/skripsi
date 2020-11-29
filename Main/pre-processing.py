@@ -118,7 +118,6 @@ setup_num['S009'] = True
 
 #used class
 class_code = dict()
-class_name = dict()
 for i in range(name_class.shape[0]):
     class_code[name_class['code'][i]] = name_class['name'][i]
 

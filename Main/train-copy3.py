@@ -40,10 +40,10 @@ if gpu:
 
 #initialize
 num_train = 21
-learn_rate = 1e-4
+learn_rate = 1e-5
 num_epochs = 43 #pengujian
 batchsize = 16
-drop_out = 0.4
+drop_out = 0
 
 #file to save
 weight_final = 'modelActivity%02i.h5' % num_train

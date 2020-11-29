@@ -162,6 +162,12 @@ print("classification report"),
 print(classification_report(testY.argmax(axis=1), predictions.argmax(axis=1), target_names=lb.classes_))
 df = pd.DataFrame(report).transpose()
 df.to_csv(os.path.join(report_path, classification_report_file), index = False)
+scores = model.evaluate(testX, testY, verbose=0)
+print("%s: %.2f%%" % (model.metrics_names[0], scores[0]*100))
+f = open(os.path.join(report_path, configure_file), 'a')
+f.write("%s: %.2f%%" % (model.metrics_names[0], scores[0]*100))
+f.close()
+
 
 # plot the training loss and accuracy
 print("[INFO] making plot for loss and accuracy...")

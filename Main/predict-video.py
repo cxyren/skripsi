@@ -79,6 +79,7 @@ writer = None
 (W, H) = (None, None)
 
 images = glob(os.path.join(temp_path, '*'))
+
 # loop over frames from the video file stream
 print('[INFO] loop over frames ...')
 for i in range(len(images)):

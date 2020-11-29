@@ -40,7 +40,7 @@ if gpu:
 
 #initialize
 num_train = 20
-learn_rate = 1e-4 #liat hasil
+learn_rate = 1e-5 #liat hasil
 num_epochs = 43
 batchsize = 16
 drop_out = 0.05
