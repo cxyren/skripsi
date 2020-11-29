@@ -7,6 +7,13 @@ from tqdm import tqdm
 import ffmpy
 
 #function
+def convert_avi_to_mp4(avi_file_path, output_name):
+    ff = ffmpy.FFmpeg(
+        inputs={avi_file_path: None},
+        outputs={output_name: None}
+        )
+    ff.run()
+
 def read_skeleton_file(filename):
     file = open(filename)
     framecount = file.readline()
@@ -100,59 +107,47 @@ def load_missing_file(path):
                 missing_files[line] = True 
     return missing_files 
 
-# raw_path = 'D:/user/Documents/Skripsi/Dataset/RGB-raw/nturgb+d_rgb/'
-# mp4_path = 'D:/user/Documents/Skripsi/Dataset/RGB-mp4/'
+skiprow = 0
+#preprocessing video from csv and convert into frame
+train = pd.read_csv('D:/user/Documents/Skripsi/Dataset/fix/RGB_newest2.csv', skiprows=skiprow)
+train.columns = ['video']
+train_image = []
+
+raw_path = 'D:/user/Documents/Skripsi/Dataset/RGB-raw/nturgb+d_rgb/'
+mp4_path = 'D:/user/Documents/Skripsi/Dataset/RGB-mp4/'
 skeleton_path = 'D:/user/Documents/Skripsi/Dataset/ntu-skeleton/skeletons/'
 missing_skeleton_path = 'D:/user/Documents/Skripsi/Dataset/ntu_rgbd_missings.txt'
-dest_path = 'C:/test/'
-
-setup_num = dict()
-setup_num['S003'] = True
-setup_num['S004'] = True
-setup_num['S005'] = True
-setup_num['S006'] = True
-setup_num['S008'] = True
-setup_num['S009'] = True
+dest_path = 'C:/train_image/'
 
 connecting_joint = [2, 1, 21, 3, 21, 5, 6, 7, 21, 9, 10, 11, 1, 13, 14, 15, 1, 17, 18, 19, 2, 8, 8, 12, 12]
 
 missing_files = load_missing_file(missing_skeleton_path)
 
-skeleton_image = []
-
-skeleton = glob(os.path.join(skeleton_path, '*'))
-
-count = 10
+# print(missing_files)
 
 # storing the frames from training videos
-for i in tqdm(range(len(skeleton))):
+for i in tqdm(range(train.shape[0])):
     check = False
     #get name of files
-    # videoFile = train['video'][i].split('.')[0]
+    videoFile = train['video'][i].split('.')[0]
+    #convert avi into mp4
+    if not os.path.isfile(os.path.join(mp4_path, videoFile + '.mp4')):
+        convert_avi_to_mp4(os.path.join(raw_path, videoFile + ".avi"),os.path.join(mp4_path, videoFile + ".mp4"))
     # capturing the video from the given path
-    
-
-    skeleton_file_name = skeleton[i].split('/')[6][10:]
+    cap = cv2.VideoCapture(os.path.join(mp4_path, videoFile + ".mp4"))
     #check if skeleton file is missing or not
-    if skeleton_file_name in missing_files:
+    if videoFile.split('_')[0] in missing_files:
         continue
-    
-    if skeleton_file_name[:4] not in setup_num:
-        continue
-
     #read skeleton file
-    bodyinfo = read_skeleton_file(os.path.join(skeleton_path, skeleton_file_name))
+    bodyinfo = read_skeleton_file(os.path.join(skeleton_path, videoFile.split('_')[0] + '.skeleton'))
     # print('Frame count: %d\n' % len(bodyinfo))
     for j in range(len(bodyinfo)): #jumlah frame
-        frame = np.zeros(shape=[1920, 1080, 3], dtype=np.uint8)
+        ret, frame = cap.read()
         color = tuple(reversed([0,0,0]))
         frame[:] = color
-        
+        if ret != True:
+            break
         if j % 15 == 0 :
-            if count < 0:
-                check = True
-                break
-            count = count - 1
             for l in range(25):
                 try:
                     # red for line
@@ -187,20 +182,22 @@ for i in tqdm(range(len(skeleton))):
                     #write joint
                     frame = cv2.circle(frame, (dx, dy), radius=5, color=(bv, gv, rv), thickness=-1)
                 except:
+                    # print("Skeleton is Broken AF")
                     check = True
                     break
             if check:
                 break
-            filename = os.path.join(dest_path,  skeleton_file_name.split('_')[0] +"_frame%d.jpg" % j)
+            filename = os.path.join(dest_path,  videoFile.split('_')[0] +"_frame%d.jpg" % j)
             frame = cv2.resize(frame, (int(frame.shape[1] * 0.3), int(frame.shape[0] * 0.3)))
             cv2.imwrite(filename, frame)
     if check:
         continue
+    # print("success processing video : %d" % (i + 1))
 
 print('[INFO]PLACING LABEL INTO IMAGE...')
 # getting the names of all the images
 images = glob(os.path.join(dest_path, '*'))
-name_class = pd.read_csv('D:/user/Documents/Skripsi/Dataset/class_name_new.csv')
+name_class = pd.read_csv('D:/user/Documents/Skripsi/Dataset/class_name_new.csv', skiprows=skiprow)
 train_image = []
 train_class = []
 
@@ -215,7 +212,7 @@ for i in tqdm(range(len(images))):
             if class_count[j] > 1471:
                 break
             class_count[j] = class_count[j] + 1
-            train_image.append(_nameimage[5:])
+            train_image.append(_nameimage[12:])
             train_class.append(name_class['name'][j])
             break
     
@@ -226,4 +223,4 @@ train_data['class'] = train_class
 
 print('[INFO]SAVING INTO CSV...')
 # converting the dataframe into csv file 
-train_data.to_csv('D:/user/Documents/Skripsi/Dataset/fix/train_newest6.csv', header=True, index=False)
+train_data.to_csv('D:/user/Documents/Skripsi/Dataset/fix/train_newest4.csv', header=True, index=False)

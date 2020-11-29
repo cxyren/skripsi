@@ -39,11 +39,11 @@ if gpu:
 		print(e)
 
 #initialize
-num_train = 17 #18 #22
-learn_rate = 1e-5 #3 #5e5
-num_epochs = 43 #pengujian
+num_train = 20
+learn_rate = 1e-4
+num_epochs = 43
 batchsize = 16
-drop_out = 0.2
+drop_out = 0.3
 
 #file to save
 weight_final = 'modelActivity%02i.h5' % num_train

@@ -1,9 +1,8 @@
 from glob import glob
 from tqdm import tqdm
 import pandas as pd
-from sklearn.model_selection import train_test_split
 
-video = glob("D:/user/Documents/Skripsi/Dataset/RGB-raw/nturgb+d_rgb/*")
+video = glob('D:/user/Documents/Skripsi/Dataset/ntu-skeleton/skeletons/*')
 class_name = pd.read_csv('D:/user/Documents/Skripsi/Dataset/class_name_new.csv')
 setup_num = dict()
 setup_num['S003'] = True
@@ -12,7 +11,7 @@ setup_num['S005'] = True
 setup_num['S006'] = True
 setup_num['S008'] = True
 setup_num['S009'] = True
-video_name = []
+skeleton_name = []
 name_class = []
 
 for i in tqdm(range(len(video))):
@@ -28,4 +27,4 @@ for i in tqdm(range(len(video))):
 df = pd.DataFrame()
 df['video'] = video_name
 
-df.to_csv('D:/user/Documents/Skripsi/Dataset/fix/RGB_newest2.csv',header=True, index=False)
+df.to_csv('D:/user/Documents/Skripsi/Dataset/fix/RGB_newest3.csv',header=True, index=False)
