@@ -19,4 +19,4 @@ Library yang digunakan:
 - Tqdm
 - Skimage
 - Sklearn
-- Ffmpy
+- Ffmpy (untuk convert video)

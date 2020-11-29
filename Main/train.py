@@ -39,8 +39,8 @@ if gpu:
 		print(e)
 
 #initialize
-num_train = 17 #18 #22
-learn_rate = 1e-5 #3 #5e5
+num_train = 18 #18 #22
+learn_rate = 1e-3 #3 #5e5
 num_epochs = 43 #pengujian
 batchsize = 16
 drop_out = 0.2

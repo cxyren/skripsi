@@ -4,7 +4,6 @@ import pandas as pd
 import numpy as np
 from glob import glob
 from tqdm import tqdm
-import ffmpy
 
 #function
 def read_skeleton_file(filename):
@@ -100,12 +99,15 @@ def load_missing_file(path):
                 missing_files[line] = True 
     return missing_files 
 
-# raw_path = 'D:/user/Documents/Skripsi/Dataset/RGB-raw/nturgb+d_rgb/'
-# mp4_path = 'D:/user/Documents/Skripsi/Dataset/RGB-mp4/'
+#path
 skeleton_path = 'D:/user/Documents/Skripsi/Dataset/ntu-skeleton/skeletons/'
 missing_skeleton_path = 'D:/user/Documents/Skripsi/Dataset/ntu_rgbd_missings.txt'
-dest_path = 'C:/test/'
+dest_path = 'C:/train_tests/'
 
+#class that been used
+name_class = pd.read_csv('D:/user/Documents/Skripsi/Dataset/class_name_new.csv')
+
+#used setup
 setup_num = dict()
 setup_num['S003'] = True
 setup_num['S004'] = True
@@ -114,45 +116,58 @@ setup_num['S006'] = True
 setup_num['S008'] = True
 setup_num['S009'] = True
 
+#used class
+class_code = dict()
+class_name = dict()
+for i in range(name_class.shape[0]):
+    class_code[name_class['code'][i]] = name_class['name'][i]
+
+#array of joint that connected
 connecting_joint = [2, 1, 21, 3, 21, 5, 6, 7, 21, 9, 10, 11, 1, 13, 14, 15, 1, 17, 18, 19, 2, 8, 8, 12, 12]
 
+#skeleton missing files
 missing_files = load_missing_file(missing_skeleton_path)
 
+#create empty list
 skeleton_image = []
+name_skeleton = []
+class_skeleton = []
 
+#get all skeleton
 skeleton = glob(os.path.join(skeleton_path, '*'))
 
-count = 10
-
-# storing the frames from training videos
+#storing the frames
 for i in tqdm(range(len(skeleton))):
-    check = False
-    #get name of files
-    # videoFile = train['video'][i].split('.')[0]
-    # capturing the video from the given path
-    
+    #check if skeleton not valid
+    check = False   
 
+    #get skeleton name 
     skeleton_file_name = skeleton[i].split('/')[6][10:]
+
     #check if skeleton file is missing or not
     if skeleton_file_name in missing_files:
         continue
     
+    #check if skeleton in the setup dict
     if skeleton_file_name[:4] not in setup_num:
+        continue
+
+    #check if skeleton not in class dict
+    if skeleton_file_name.split('.')[0][-4:] not in class_code:
         continue
 
     #read skeleton file
     bodyinfo = read_skeleton_file(os.path.join(skeleton_path, skeleton_file_name))
-    # print('Frame count: %d\n' % len(bodyinfo))
-    for j in range(len(bodyinfo)): #jumlah frame
-        frame = np.zeros(shape=[1920, 1080, 3], dtype=np.uint8)
-        color = tuple(reversed([0,0,0]))
-        frame[:] = color
-        
+    
+    #loop for in frame
+    for j in range(len(bodyinfo)): 
+        #get 2 frame per second  
         if j % 15 == 0 :
-            if count < 0:
-                check = True
-                break
-            count = count - 1
+            #make blank images
+            frame = np.zeros(shape=[1080, 1920, 3], dtype=np.uint8)
+            color = tuple(reversed([0,0,0]))
+            frame[:] = color
+            #loop in skeleton joint
             for l in range(25):
                 try:
                     # red for line
@@ -187,43 +202,26 @@ for i in tqdm(range(len(skeleton))):
                     #write joint
                     frame = cv2.circle(frame, (dx, dy), radius=5, color=(bv, gv, rv), thickness=-1)
                 except:
+                    #if theres error then break
                     check = True
                     break
+            #if theres error then break
             if check:
                 break
-            filename = os.path.join(dest_path,  skeleton_file_name.split('_')[0] +"_frame%d.jpg" % j)
+            #save label and name
+            name_skeleton.append(skeleton_file_name.split('.')[0].split('_')[0] +"_frame%d.jpg" % j)
+            class_skeleton.append(class_code.get(skeleton_file_name.split('.')[0][-4:]))
+            #save file
+            filename = os.path.join(dest_path,  skeleton_file_name.split('.')[0].split('_')[0] +"_frame%d.jpg" % j)
             frame = cv2.resize(frame, (int(frame.shape[1] * 0.3), int(frame.shape[0] * 0.3)))
             cv2.imwrite(filename, frame)
-    if check:
-        continue
 
-print('[INFO]PLACING LABEL INTO IMAGE...')
-# getting the names of all the images
-images = glob(os.path.join(dest_path, '*'))
-name_class = pd.read_csv('D:/user/Documents/Skripsi/Dataset/class_name_new.csv')
-train_image = []
-train_class = []
 
-class_count = [0]*name_class.shape[0] 
-for i in tqdm(range(len(images))):
-    # creating the image name
-    _nameimage = images[i].split('/')[1]
-    # creating the class of image 
-    _class = _nameimage.split('_')[1][-4:]
-    for j in range(name_class.shape[0]):
-        if _class == name_class['code'][j]:
-            if class_count[j] > 1471:
-                break
-            class_count[j] = class_count[j] + 1
-            train_image.append(_nameimage[5:])
-            train_class.append(name_class['name'][j])
-            break
-    
 # storing the images and their class in a dataframe
-train_data = pd.DataFrame()
-train_data['image'] = train_image
-train_data['class'] = train_class
+df = pd.DataFrame()
+df['image'] = name_skeleton
+df['class'] = class_skeleton
 
 print('[INFO]SAVING INTO CSV...')
 # converting the dataframe into csv file 
-train_data.to_csv('D:/user/Documents/Skripsi/Dataset/fix/train_newest6.csv', header=True, index=False)
+df.to_csv('D:/user/Documents/Skripsi/Dataset/fix/train_newest6.csv', header=True, index=False)
