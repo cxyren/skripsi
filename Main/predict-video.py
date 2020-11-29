@@ -74,7 +74,7 @@ name_img = []
 for i in tqdm(range(df.shape[0])):
 	#read skeleton here
 	print('ELLO')
-# videocap = cv2.VideoCapture(os.path.join(input_path, input_video))
+
 writer = None
 (W, H) = (None, None)
 
@@ -113,7 +113,7 @@ for i in range(len(images)):
 
 	# draw the activity on the output frame
 	text = 'activity: {}'.format(label)
-	print('activity: ')
+	print('activity: {}'.format(label))
 	cv2.putText(output, text, (35, 50), cv2.FONT_HERSHEY_SIMPLEX,
 		1.25, (0, 255, 0), 5)
 
@@ -138,3 +138,5 @@ for i in range(len(images)):
 # release the file pointers
 print('[INFO] cleaning up...')
 writer.release()
+for f in images:
+    os.remove(f)

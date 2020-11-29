@@ -39,11 +39,11 @@ if gpu:
 		print(e)
 
 #initialize
-num_train = 21
+num_train = 23
 learn_rate = 1e-5
-num_epochs = 43 #pengujian
+num_epochs = 25 #pengujian
 batchsize = 16
-drop_out = 0
+drop_out = 0.3
 
 #file to save
 weight_final = 'modelActivity%02i.h5' % num_train
@@ -162,6 +162,12 @@ print("classification report"),
 print(classification_report(testY.argmax(axis=1), predictions.argmax(axis=1), target_names=lb.classes_))
 df = pd.DataFrame(report).transpose()
 df.to_csv(os.path.join(report_path, classification_report_file), index = False)
+scores = model.evaluate(testX, testY, verbose=0)
+print("%s: %.2f%%" % (model.metrics_names[0], scores[0]*100))
+f = open(os.path.join(report_path, configure_file), 'a')
+f.write("%s: %.2f%%" % (model.metrics_names[0], scores[0]*100))
+f.close()
+
 
 # plot the training loss and accuracy
 print("[INFO] making plot for loss and accuracy...")

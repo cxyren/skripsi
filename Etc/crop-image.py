@@ -25,11 +25,22 @@ for i in tqdm(range(df.shape[0])):
             class_count[j] = class_count[j] + 1
             # loading the image and resize to 224x224 and rgb
             img = cv2.imread(os.path.join(arr_path, df['image'][i]))
-            center = img.shape
-            top = (center[0] - center[0] * 0.6) / 2
-            bot = top + center[0]
-            left = (center[1] - center[1] * 0.5) / 2
-            right = left + center[1] * 0.5
+            top = 9999
+            bot = -1
+            left = 9999
+            right = -1
+
+            for j in range(img.shape[1]):
+                for k in range(img.shape[0]):
+                    if all(k > 0 for k in img[k,j]):
+                        if j < top:
+                            top = j
+                        if j > bot:
+                            bot = j
+                        if i < left:
+                            left = i
+                        if i > right:
+                            right = i
 
             crop_img = img[int(top):int(bot), int(left):int(right)]
             # save img
