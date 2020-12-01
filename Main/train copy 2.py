@@ -40,11 +40,11 @@ if gpu:
 		print(e)
 
 #initialize
-num_train = 31 #31
-learn_rate = 1e-5 
+num_train = 33 #31
+learn_rate = 1e-4 
 num_epochs = 25 #25
 batchsize = 16
-drop_out = 0.15 #0.4
+drop_out = 0.25 #0.4
 
 #file to save
 weight_final = 'modelActivity%02i.h5' % num_train
@@ -106,6 +106,7 @@ newModel.add(Conv2D(filters=128, kernel_size=5, strides=(2,2), activation='relu'
 newModel.add(Dropout(0.1))
 newModel.add(Conv2D(filters=64, kernel_size=3, activation='relu'))
 newModel.add(Conv2D(filters=64, kernel_size=3, activation='relu'))
+newModel.add(AveragePooling2D(pool_size=(3,3)))
 newModel.add(Conv2D(filters=64, kernel_size=3, activation='relu'))
 newModel.add(Conv2D(filters=64, kernel_size=3, activation='relu'))
 newModel.add(Conv2D(filters=64, kernel_size=3, activation='relu'))
