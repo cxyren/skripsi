@@ -38,12 +38,14 @@ if gpu:
 	except RuntimeError as e:
 		print(e)
 
+time.sleep(300)
+
 #initialize
 num_train = 22
 learn_rate = 1e-5 
-num_epochs = 43
+num_epochs = 50
 batchsize = 16
-drop_out = 0
+drop_out = 0.1
 
 #file to save
 weight_final = 'modelActivity%02i.h5' % num_train
@@ -72,8 +74,8 @@ f.close()
 
 print("[INFO] load image ...")
 #load pickle of image and label
-X = pickle.loads(open(os.path.join(data_path, 'x.pickle'), "rb").read())
-y = pickle.loads(open(os.path.join(data_path, 'y.pickle'), "rb").read())
+X = pickle.loads(open(os.path.join(data_path, 'x2.pickle'), "rb").read())
+y = pickle.loads(open(os.path.join(data_path, 'y2.pickle'), "rb").read())
 
 # converting the list of image to numpy array
 X = np.array(X)

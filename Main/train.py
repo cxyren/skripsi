@@ -39,11 +39,11 @@ if gpu:
 		print(e)
 
 #initialize
-num_train = 19 #20
-learn_rate = 1e-5 #fix
-num_epochs = 43 #pengujian
+num_train = 25 #25
+learn_rate = 1e-5 
+num_epochs = 25 #25
 batchsize = 16
-drop_out = 0.2 #0.1
+drop_out = 0 #0.4
 
 #file to save
 weight_final = 'modelActivity%02i.h5' % num_train
@@ -72,8 +72,8 @@ f.close()
 
 print("[INFO] load image ...")
 #load pickle of image and label
-X = pickle.loads(open(os.path.join(data_path, 'x.pickle'), "rb").read())
-y = pickle.loads(open(os.path.join(data_path, 'y.pickle'), "rb").read())
+X = pickle.loads(open(os.path.join(data_path, 'x3.pickle'), "rb").read())
+y = pickle.loads(open(os.path.join(data_path, 'y3.pickle'), "rb").read())
 
 # converting the list of image to numpy array
 X = np.array(X)
@@ -87,7 +87,7 @@ y = lb.fit_transform(y)
 
 #split data
 print("[INFO] splitting data ...")
-trainX, testX, trainY, testY = train_test_split(X, y, random_state = 42, test_size = 0.25, stratify = y)
+trainX, testX, trainY, testY = train_test_split(X, y, random_state = 42, test_size = 0.20, stratify = y)
 
 # #release memory
 del X
@@ -97,16 +97,16 @@ del gc.garbage[:]
 
 #load VGG16 network
 print("[INFO] load vgg16 model ...")
-baseModel = VGG16(weights='imagenet', include_top=False, input_shape=(224, 224, 3))
+baseModel = VGG16(weights='imagenet', include_top=False, input_shape=(224, 224, 30))
 
 # add callbacks for model
 print("[INFO] adding callbacks ...")
 time_callbacks = TimeHistory()
 model_callbacks =[
     #for earlystoping
-    EarlyStopping(monitor='val_accuracy', min_delta=0, patience=40, verbose=1, mode='auto'),
+    EarlyStopping(monitor='val_accuracy', patience=5, verbose=1, mode='max'),
     #for check point
-    ModelCheckpoint(filepath=os.path.join(check_path, 'model.{epoch:02d}-{val_loss:.2f}.h5'), monitor='val_loss', verbose=1, save_best_only=False, save_weights_only=False, mode='auto'),
+    ModelCheckpoint(filepath=os.path.join(check_path, 'model.{epoch:02d}-{val_loss:.2f}.h5'), monitor='val_loss', verbose=1, save_best_only=True, save_weights_only=False, mode='min'),
     #for record time
     time_callbacks
 ] 
@@ -148,7 +148,7 @@ H = model.fit(
     x=trainX,
     y=trainY,
     batch_size=batchsize,
-    validation_split=0.25,
+    validation_split=0.10,
     shuffle=True,
     epochs=num_epochs,
     callbacks=model_callbacks
@@ -165,7 +165,7 @@ df.to_csv(os.path.join(report_path, classification_report_file), index = False)
 scores = model.evaluate(testX, testY, verbose=0)
 print("%s: %.2f%%" % (model.metrics_names[0], scores[0]*100))
 f = open(os.path.join(report_path, configure_file), 'a')
-f.write("%s: %.2f%%" % (model.metrics_names[0], scores[0]*100))
+f.write("%s: %.2f%%\n" % (model.metrics_names[0], scores[0]*100))
 f.close()
 
 
@@ -174,8 +174,8 @@ print("[INFO] making plot for loss and accuracy...")
 #loss
 plt.style.use('ggplot')
 plt.figure()
-plt.plot(np.arange(0, num_epochs), H.history["loss"], label="train_loss")
-plt.plot(np.arange(0, num_epochs), H.history["val_loss"], label="val_loss")
+plt.plot(H.history["loss"], label="train_loss")
+plt.plot(H.history["val_loss"], label="val_loss")
 plt.title("Training Loss on Dataset")
 plt.xlabel("Epoch #")
 plt.ylabel("Loss")
@@ -184,8 +184,8 @@ plt.savefig(os.path.join(report_path, loss_file))
 #accuracy
 plt.style.use('ggplot')
 plt.figure()
-plt.plot(np.arange(0, num_epochs), H.history["accuracy"], label="train_acc")
-plt.plot(np.arange(0, num_epochs), H.history["val_accuracy"], label="val_acc")
+plt.plot(H.history["accuracy"], label="train_acc")
+plt.plot(H.history["val_accuracy"], label="val_acc")
 plt.title("Training Accuracy on Dataset")
 plt.xlabel("Epoch #")
 plt.ylabel("Accuracy")

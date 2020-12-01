@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 from glob import glob
 from tqdm import tqdm
+import math
 
 #function
 def read_skeleton_file(filename):
@@ -129,8 +130,10 @@ missing_files = load_missing_file(missing_skeleton_path)
 
 #create empty list
 skeleton_image = []
-name_skeleton = []
-class_skeleton = []
+skeleton_name = []
+skeleton_class = []
+spine_mid_x = []
+spine_mid_y = []
 
 #get all skeleton
 skeleton = glob(os.path.join(skeleton_path, '*'))
@@ -157,11 +160,18 @@ for i in tqdm(range(len(skeleton))):
 
     #read skeleton file
     bodyinfo = read_skeleton_file(os.path.join(skeleton_path, skeleton_file_name))
+
+    count = math.floor(float(len(bodyinfo) - 5) / 10)
+
+    framecount = 0
     
     #loop for in frame
     for j in range(len(bodyinfo)): 
-        #get 2 frame per second  
-        if j % 15 == 0 :
+        #get 10 frame 
+        if framecount > 9:
+            break
+        if (j - 5) % count == 0 :
+            framecount = framecount + 1
             #make blank images
             frame = np.zeros(shape=[1080, 1920, 3], dtype=np.uint8)
             color = tuple(reversed([0,0,0]))
@@ -207,9 +217,13 @@ for i in tqdm(range(len(skeleton))):
             #if theres error then break
             if check:
                 break
+            joint = bodyinfo[j][0]['joints'][1]
+            spine_mid_x.append(joint['colorX'])
+            spine_mid_y.append(joint['colorY'])
             #save label and name
-            name_skeleton.append(skeleton_file_name.split('.')[0].split('_')[0] +"_frame%d.jpg" % j)
-            class_skeleton.append(class_code.get(skeleton_file_name.split('.')[0][-4:]))
+            skeleton_name.append(skeleton_file_name.split('.')[0].split('_')[0])
+            skeleton_image.append(skeleton_file_name.split('.')[0].split('_')[0] +"_frame%d.jpg" % j)
+            skeleton_class.append(class_code.get(skeleton_file_name.split('.')[0][-4:]))
             #save file
             filename = os.path.join(dest_path,  skeleton_file_name.split('.')[0].split('_')[0] +"_frame%d.jpg" % j)
             frame = cv2.resize(frame, (int(frame.shape[1] * 0.3), int(frame.shape[0] * 0.3)))
@@ -218,9 +232,12 @@ for i in tqdm(range(len(skeleton))):
 
 # storing the images and their class in a dataframe
 df = pd.DataFrame()
-df['image'] = name_skeleton
-df['class'] = class_skeleton
+df['skeleton'] =skeleton_name
+df['image'] = skeleton_image
+df['class'] = skeleton_class
+df['spine_mid_X'] = spine_mid_x
+df['spine_mid_Y'] = spine_mid_y
 
 print('[INFO]SAVING INTO CSV...')
 # converting the dataframe into csv file 
-df.to_csv('D:/user/Documents/Skripsi/Dataset/fix/train_newest6.csv', header=True, index=False)
+df.to_csv('D:/user/Documents/Skripsi/Dataset/fix/train_newest8.csv', header=True, index=False)

@@ -41,9 +41,9 @@ if gpu:
 #initialize
 num_train = 23
 learn_rate = 1e-5
-num_epochs = 25 #pengujian
+num_epochs = 25
 batchsize = 16
-drop_out = 0.3
+drop_out = 0
 
 #file to save
 weight_final = 'modelActivity%02i.h5' % num_train
@@ -72,8 +72,8 @@ f.close()
 
 print("[INFO] load image ...")
 #load pickle of image and label
-X = pickle.loads(open(os.path.join(data_path, 'x.pickle'), "rb").read())
-y = pickle.loads(open(os.path.join(data_path, 'y.pickle'), "rb").read())
+X = pickle.loads(open(os.path.join(data_path, 'x2.pickle'), "rb").read())
+y = pickle.loads(open(os.path.join(data_path, 'y2.pickle'), "rb").read())
 
 # converting the list of image to numpy array
 X = np.array(X)

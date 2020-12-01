@@ -7,6 +7,53 @@ import numpy as np
 import pickle
 import cv2
 import os
+import sys
+
+def read_skeleton_file(filename):
+    file = open(filename)
+    framecount = file.readline()
+
+    bodyinfo = []
+    for i in range(int(framecount)):
+        bodycount = file.readline()
+        bodies = []
+        for j in range(int(bodycount)):
+            arraynum = file.readline().split()
+            body = {
+                "bodyID": arraynum[0],
+                "clipedEdges": arraynum[1],
+                "handLeftConfidence": arraynum[2],
+                "handLeftState": arraynum[3],
+                "handRightConfidence": arraynum[4],
+                "handRightState": arraynum[5],
+                "isResticted": arraynum[6],
+                "leanX": arraynum[7],
+                "leanY": arraynum[8],
+                "trackingState": arraynum[9],
+                "jointCount": file.readline(),
+                "joints": []
+            }
+            for k in range(int(body["jointCount"])):
+                jointinfo = file.readline().split()
+                joint={
+                    "x": jointinfo[0],
+                    "y": jointinfo[1],
+                    "z": jointinfo[2],
+                    "depthX": jointinfo[3],
+                    "depthY": jointinfo[4],
+                    "colorX": jointinfo[5],
+                    "colorY": jointinfo[6],
+                    "orientationW": jointinfo[7],
+                    "orientationX": jointinfo[8],
+                    "orientationY": jointinfo[9],
+                    "orientationZ": jointinfo[10],
+                    "trackingState": jointinfo[11]
+                }
+                body["joints"].append(joint)
+            bodies.append(body)
+        bodyinfo.append(bodies)
+    file.close()
+    return bodyinfo
 
 def bresenham_line(x0, y0, x1, y1):
     steep = abs(y1 - y0) > abs(x1 - x0)
@@ -46,14 +93,14 @@ def bresenham_line(x0, y0, x1, y1):
     return line
 
 #initialize
-num_model = 1
-count = 1
+num_model = 18
+count = len(glob('D:/user/Documents/Skripsi/Output/*')) + 1
 model_path = 'D:/user/Documents/Skripsi/Model/'
 temp_path = 'D:/user/Documents/Skripsi/Input/Temp/'
-model_file = 'modelActivity%02i.model' % num_model
+model_file = 'modelActivity%02i.h5' % num_model
 label_file = 'lb%02i.pickle' % num_model
 input_path = 'D:/user/Documents/Skripsi/Input/'
-input_skeleton = ''
+input_skeleton = sys.argv[1]
 output_path = 'D:/user/Documents/Skripsi/Output/'
 output_video = 'Output%02i.avi' % count
 size = 128
@@ -61,19 +108,70 @@ connecting_joint = [2, 1, 21, 3, 21, 5, 6, 7, 21, 9, 10, 11, 1, 13, 14, 15, 1, 1
 
 # load the trained model and label from disk
 print('[INFO] loading model and label ...')
-model = load_model(os.path.join(model_path, model_file))
+print(os.path.join(model_path, model_file))
+model = load_model(os.path.join(model_path, model_file), compile=False)
 lb = pickle.loads(open(os.path.join(model_path, label_file), "rb").read())
 
 Q = deque(maxlen=size)
 
+#class that been used
+name_class = pd.read_csv('D:/user/Documents/Skripsi/Dataset/class_name_new.csv')
+
+activity = dict()
+for i in range(name_class.shape[0]):
+	activity[name_class['name'][i]] = 0
+
 # load skeleton
 print('[INFO] load skeleton ...')
 #read skeleton
-df = pd.read_csv(os.path.join(input_path, input_skeleton))
-name_img = []
-for i in tqdm(range(df.shape[0])):
-	#read skeleton here
-	print('ELLO')
+if input_skeleton.split('.')[1] == 'csv':
+	df = pd.read_csv(os.path.join(input_path, input_skeleton))
+	name_img = []
+	for i in tqdm(range(df.shape[0])):
+		#read skeleton here
+		print('ELLO')
+if input_skeleton.split('.')[1] == 'skeleton':
+	bodyinfo = read_skeleton_file(os.path.join(input_path, input_skeleton))
+	for i in range(len(bodyinfo)):
+		frame = np.zeros(shape=[1080, 1920, 3], dtype=np.uint8)
+		color = tuple(reversed([0,0,0]))
+		frame[:] = color
+		for j in range(25):
+			# red for line
+			rv = 255
+			gv = 0
+			bv = 0
+			#search for joint that connect
+			k = connecting_joint[j] - 1
+			#get joint x and y
+			joint = bodyinfo[i][0]['joints'][j]
+			dx = np.int32(round(float(joint['colorX'])))
+			dy = np.int32(round(float(joint['colorY'])))
+			joint2 = bodyinfo[i][0]['joints'][k]
+			dx2 = np.int32(round(float(joint2['colorX'])))
+			dy2 = np.int32(round(float(joint2['colorY'])))
+			#get pixel for the line 
+			line = bresenham_line(dx, dy, dx2, dy2)
+			#write line per pixel
+			for l in range(len(line)):
+				dx = line[l][0]
+				dy = line[l][1]
+				frame = cv2.circle(frame, (dx, dy), radius=2, color=(bv, gv, rv), thickness=-1)
+
+			#green color for points/ joints
+			rv = 0
+			gv = 255
+			bv = 0
+			#get x and y
+			joint = bodyinfo[i][0]['joints'][j]
+			dx = np.int32(round(float(joint['colorX'])))
+			dy = np.int32(round(float(joint['colorY'])))
+			#write joint
+			frame = cv2.circle(frame, (dx, dy), radius=5, color=(bv, gv, rv), thickness=-1)		
+		#save file
+		filename = os.path.join(temp_path, "frame%i.jpg" % i)
+		# frame = cv2.resize(frame, (224, 224))
+		cv2.imwrite(filename, frame)
 
 writer = None
 (W, H) = (None, None)
@@ -85,10 +183,6 @@ print('[INFO] loop over frames ...')
 for i in range(len(images)):
 	# read the next frame from the file
 	frame = cv2.imread(images[i])
-
-	# if the frame was not grabbedm then break
-	# if not ret:
-	# 	break
 
 	# if the frame dimensions are empty, grab them
 	if W is None or H is None:
@@ -113,9 +207,9 @@ for i in range(len(images)):
 
 	# draw the activity on the output frame
 	text = 'activity: {}'.format(label)
-	print('activity: {}'.format(label))
-	cv2.putText(output, text, (35, 50), cv2.FONT_HERSHEY_SIMPLEX,
-		1.25, (0, 255, 0), 5)
+	activity[label] = activity[label] + 1
+	cv2.putText(output, text, (10, 25), cv2.FONT_HERSHEY_PLAIN,
+		1.5, (255, 255, 255), 3)
 
 	# check if the video writer is None
 	if writer is None:
@@ -128,12 +222,17 @@ for i in range(len(images)):
 	writer.write(output)
 
 	# show the output image
-	# cv2.imshow('Output', output)
 	key = cv2.waitKey(1) & 0xFF
 
 	# if the `q` key was pressed, break from the loop
 	if key == ord('q'):
 		break
+
+#result
+print(activity)
+print('[INFO] RESULT ...')
+print('ACTIVITY: ' + max(activity, key=activity.get))
+
 
 # release the file pointers
 print('[INFO] cleaning up...')

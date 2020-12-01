@@ -1,10 +1,11 @@
 import os
-from keras.models import Model
-from keras.layers import Dense, Input, Dropout, Flatten, AveragePooling2D
+from keras.models import Model, Sequential
+from keras.layers import Dense, Input, Dropout, Flatten, AveragePooling2D, Conv2D
 from keras.applications.vgg16 import VGG16
 from keras.preprocessing.image import ImageDataGenerator
 from keras.callbacks import ModelCheckpoint, EarlyStopping, Callback
 from keras.optimizers import Adam
+import keras
 import cv2
 import numpy as np
 import pandas as pd
@@ -38,13 +39,12 @@ if gpu:
 	except RuntimeError as e:
 		print(e)
 
-
 #initialize
-num_train = 21
-learn_rate = 1e-4 
-num_epochs = 50 #25
+num_train = 24 #25
+learn_rate = 1e-5 
+num_epochs = 25 #25
 batchsize = 16
-drop_out = 0 #0.5
+drop_out = 0.4 #0.4
 
 #file to save
 weight_final = 'modelActivity%02i.h5' % num_train
@@ -73,8 +73,8 @@ f.close()
 
 print("[INFO] load image ...")
 #load pickle of image and label
-X = pickle.loads(open(os.path.join(data_path, 'x2.pickle'), "rb").read())
-y = pickle.loads(open(os.path.join(data_path, 'y2.pickle'), "rb").read())
+X = pickle.loads(open(os.path.join(data_path, 'x3.pickle'), "rb").read())
+y = pickle.loads(open(os.path.join(data_path, 'y3.pickle'), "rb").read())
 
 # converting the list of image to numpy array
 X = np.array(X)
@@ -86,9 +86,9 @@ y = np.array(y)
 lb = LabelBinarizer()
 y = lb.fit_transform(y)
 
-#split data
+# #split data
 print("[INFO] splitting data ...")
-trainX, testX, trainY, testY = train_test_split(X, y, random_state = 42, test_size = 0.25, stratify = y)
+trainX, testX, trainY, testY = train_test_split(X, y, random_state = 42, test_size = 0.2, stratify = y)
 
 # #release memory
 del X
@@ -97,59 +97,86 @@ gc.collect()
 del gc.garbage[:] 
 
 #load VGG16 network
-print("[INFO] load vgg16 model ...")
-baseModel = VGG16(weights='imagenet', include_top=False, input_shape=(224, 224, 3))
+# print("[INFO] load vgg16 model ...")
+# baseModel = VGG16(weights='imagenet', include_top=False, input_shape=(224, 224, 3))
 
-# add callbacks for model
+newModel = Sequential()
+# Model 1
+newModel.add(Conv2D(filters=64, kernel_size=7, strides=(3,3), activation='relu', input_shape=(224,224,30))) #32
+newModel.add(Conv2D(filters=128, kernel_size=5, strides=(2,2), activation='relu'))#64 stride 1
+newModel.add(Dropout(0.2))
+newModel.add(Conv2D(filters=64, kernel_size=3, activation='relu'))
+newModel.add(Conv2D(filters=64, kernel_size=3, activation='relu'))
+newModel.add(Conv2D(filters=64, kernel_size=3, activation='relu'))
+newModel.add(Conv2D(filters=64, kernel_size=3, activation='relu'))
+newModel.add(Conv2D(filters=64, kernel_size=3, activation='relu'))
+newModel.add(Dropout(0.1))
+newModel.add(Flatten())
+newModel.add(Dense(128, activation='relu'))
+newModel.add(Dropout(0.05))
+newModel.add(Dense(len(lb.classes_), activation='softmax'))
+
+# Model 2
+# newModel.add(Conv2D(filters=32, kernel_size=7, strides=(3,3), activation='relu', input_shape=(224,224,30)))
+# newModel.add(Conv2D(filters=64, kernel_size=5, activation='relu'))
+# newModel.add(Conv2D(filters=64, kernel_size=3, activation='relu'))
+# newModel.add(Dropout(0.1))
+# newModel.add(Flatten())
+# newModel.add(Dense(128, activation='relu'))
+# newModel.add(Dropout(0.1))
+# newModel.add(Dense(len(lb.classes_), activation='softmax'))
+
+
+# # add callbacks for model
 print("[INFO] adding callbacks ...")
 time_callbacks = TimeHistory()
 model_callbacks =[
     #for earlystoping
-    EarlyStopping(monitor='val_accuracy', min_delta=0, patience=40, verbose=1, mode='auto'),
+    EarlyStopping(monitor='val_loss', patience=5, verbose=1, mode='min'),
     #for check point
     ModelCheckpoint(filepath=os.path.join(check_path, 'model.{epoch:02d}-{val_loss:.2f}.h5'), monitor='val_loss', verbose=1, save_best_only=False, save_weights_only=False, mode='auto'),
     #for record time
     time_callbacks
 ] 
 
-# fullly connected layer configuration
-print("[INFO] configure fully connected layer ...")
-headModel = baseModel.output
-headModel = AveragePooling2D(pool_size=(2, 2))(headModel)
-headModel = Flatten(input_shape=baseModel.output_shape[1:])(headModel)
-headModel = Dense(512, activation='relu')(headModel)
-headModel = Dropout(drop_out)(headModel) #coba
-headModel = Dense(len(lb.classes_), activation='softmax')(headModel)
+# # fullly connected layer configuration
+# print("[INFO] configure fully connected layer ...")
+# headModel = baseModel.output
+# headModel = AveragePooling2D(pool_size=(2, 2))(headModel)
+# headModel = Flatten(input_shape=baseModel.output_shape[1:])(headModel)
+# headModel = Dense(512, activation='relu')(headModel)
+# headModel = Dropout(drop_out)(headModel) #coba
+# headModel = Dense(len(lb.classes_), activation='softmax')(headModel)
 
-# setting up model
+# # setting up model
 print("[INFO] setting up model ...")
-model = Model(inputs=baseModel.input, outputs=headModel)
+# model = Model(inputs=baseModel.input, outputs=headModel)
 
-# freeze base model trainable parameters
-for layer in baseModel.layers:
-    layer.trainable = False
+# # freeze base model trainable parameters
+# for layer in baseModel.layers:
+#     layer.trainable = False
 
 # writing summary
 print("[INFO] writing summary ...")
 with open(os.path.join(report_path, summary_file),'w') as fh:
     # Pass the file handle in as a lambda function to make it callable
-    model.summary(print_fn=lambda x: fh.write(x + '\n'))
+    newModel.summary(print_fn=lambda x: fh.write(x + '\n'))
 
-# compile model
+# # compile model
 print("[INFO] compiling ...")
-model.compile(optimizer=Adam(learning_rate=learn_rate), loss='categorical_crossentropy', metrics=['accuracy'])
+newModel.compile(optimizer=Adam(learning_rate=learn_rate), loss='categorical_crossentropy', metrics=['accuracy'])
 
-# release memory again
-gc.collect()
-del gc.garbage[:] 
+# # release memory again
+# gc.collect()
+# del gc.garbage[:] 
 
-#train the head of the network for a few epochs (all other layers are frozen) -- this will allow the new FC layers to start to become initialized with actual "learned" values versus pure random
+# #train the head of the network for a few epochs (all other layers are frozen) -- this will allow the new FC layers to start to become initialized with actual "learned" values versus pure random
 print("[INFO] training ...")
-H = model.fit(
+H = newModel.fit(
     x=trainX,
     y=trainY,
     batch_size=batchsize,
-    validation_split=0.25,
+    validation_split=0.10,
     shuffle=True,
     epochs=num_epochs,
     callbacks=model_callbacks
@@ -157,16 +184,18 @@ H = model.fit(
 
 # evaluate the network
 print("[INFO] evaluating ...")
-predictions = model.predict(x=testX.astype('float32'), batch_size=batchsize)
+predictions = newModel.predict(x=testX.astype('float32'), batch_size=batchsize)
 report = classification_report(testY.argmax(axis=1), predictions.argmax(axis=1), target_names=lb.classes_, output_dict=True)
 print("classification report"),
 print(classification_report(testY.argmax(axis=1), predictions.argmax(axis=1), target_names=lb.classes_))
 df = pd.DataFrame(report).transpose()
 df.to_csv(os.path.join(report_path, classification_report_file), index = False)
-scores = model.evaluate(testX, testY, verbose=0)
-print("%s: %.2f%%" % (model.metrics_names[0], scores[0]*100))
+scores = newModel.evaluate(testX, testY, verbose=0)
+print("%s: %.2f%%" % (newModel.metrics_names[0], scores[0]))
+print("%s: %.2f%%" % (newModel.metrics_names[1], scores[1]*100))
 f = open(os.path.join(report_path, configure_file), 'a')
-f.write("%s: %.2f%%" % (model.metrics_names[0], scores[0]*100))
+f.write("%s: %.2f%%\n" % (newModel.metrics_names[0], scores[0]))
+f.write("%s: %.2f%%\n" % (newModel.metrics_names[1], scores[1]*100))
 f.close()
 
 
@@ -175,8 +204,8 @@ print("[INFO] making plot for loss and accuracy...")
 #loss
 plt.style.use('ggplot')
 plt.figure()
-plt.plot(np.arange(0, num_epochs), H.history["loss"], label="train_loss")
-plt.plot(np.arange(0, num_epochs), H.history["val_loss"], label="val_loss")
+plt.plot(H.history["loss"], label="train_loss")
+plt.plot(H.history["val_loss"], label="val_loss")
 plt.title("Training Loss on Dataset")
 plt.xlabel("Epoch #")
 plt.ylabel("Loss")
@@ -185,8 +214,8 @@ plt.savefig(os.path.join(report_path, loss_file))
 #accuracy
 plt.style.use('ggplot')
 plt.figure()
-plt.plot(np.arange(0, num_epochs), H.history["accuracy"], label="train_acc")
-plt.plot(np.arange(0, num_epochs), H.history["val_accuracy"], label="val_acc")
+plt.plot(H.history["accuracy"], label="train_acc")
+plt.plot(H.history["val_accuracy"], label="val_acc")
 plt.title("Training Accuracy on Dataset")
 plt.xlabel("Epoch #")
 plt.ylabel("Accuracy")
@@ -203,7 +232,7 @@ df.to_csv(os.path.join(report_path, acc_n_loss_file))
 
 # saving weight
 print("[INFO] saving weight ...")
-model.save(os.path.join(model_path, weight_final))
+newModel.save(os.path.join(model_path, weight_final))
 
 # saving the label binarizer to disk
 print("[INFO] saving label ...")

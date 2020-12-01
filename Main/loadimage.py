@@ -4,47 +4,60 @@ import os
 import cv2
 import pickle
 import random
+import numpy as np
+from glob import glob
 
 #training data
-train = pd.read_csv('D:/user/Documents/Skripsi/Dataset/fix/train_newest4.csv')
+train = pd.read_csv('D:/user/Documents/Skripsi/Dataset/fix/train_newest8.csv')
 
 #path
-image_path =  'C:/train_image/' 
+image_path =  'C:/train_tests_crop/' 
 X_n_y_path = 'C:/train/'
 
 # creating empty list
 train_image_data = []
+temp_image = []
+image_count = 0
 
 #load image
 print("[INFO] load image ...")
 for i in tqdm(range(train.shape[0])):
-    top = 9999
-    bot = -1
-    left = 9999
-    right = -1
     if not train['class'][i]:
+        continue
+    if not os.path.exists(os.path.join(image_path, train['image'][i])):
         continue
     # loading the image rgb
     img = cv2.imread(os.path.join(image_path, train['image'][i]))
-    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    # get skeleton area
-    for j in range(img.shape[1]):
-        for k in range(img.shape[0]):
-            if all(k > 0 for k in img[k,j]):
-                if j < top:
-                    top = j
-                if j > bot:
-                    bot = j
-                if i < left:
-                    left = i
-                if i > right:
-                    right = i
-    #crop image
-    crop_img = img[int(top):int(bot), int(left):int(right)]
+    
+    #making empty frame    
+    frame = np.zeros(shape=[224, 224, 3], dtype=np.uint8)
+    if img.shape[1] < img.shape[0]:
+        img = cv2.resize(img, (int(img.shape[1]*(224/img.shape[0])), 224))
+
+        #relocating image
+        center_x = frame.shape[1] / 2
+        center_x2 = img.shape[1] / 2
+        
+        frame[int(0):int(224), int(center_x - center_x2):int(center_x + center_x2)] = img
+    else:
+        img = cv2.resize(img, (224, int(img.shape[0]*(224/img.shape[1]))))
+
+        #relocating image
+        center_y = frame.shape[0] / 2
+        center_y2 = img.shape[0] / 2
+        
+        frame[int(center_y - center_y2):int(center_y + center_y2), int(0):int(224)] = img
+    
     #resize image
-    img = cv2.resize(img, (224, 224))
+    frame = cv2.resize(frame, (224, 224))
+   
     # appending the image and the label into the list
-    train_image_data.append([img, train['class'][i]])
+    temp_image.append(frame)
+    image_count = image_count + 1
+    if image_count > 9:
+        train_image_data.append([np.concatenate(temp_image, axis=2), train['class'][i]])
+        temp_image.clear()
+        image_count = 0
     del img 
 del train
 
@@ -61,10 +74,10 @@ for image, label in train_image_data:
 
 #saving data
 print("[INFO] saving image data ...")
-f = open(os.path.join(X_n_y_path, 'x2.pickle'), "wb")
+f = open(os.path.join(X_n_y_path, 'x3.pickle'), "wb")
 f.write(pickle.dumps(X))
 f.close()
 
-f = open(os.path.join(X_n_y_path, 'y2.pickle'), "wb")
+f = open(os.path.join(X_n_y_path, 'y3.pickle'), "wb")
 f.write(pickle.dumps(y))
 f.close()
