@@ -40,7 +40,7 @@ if gpu:
 		print(e)
 
 #initialize
-num_train = 32  #25
+num_train = 34  #25
 learn_rate = 1e-4 
 num_epochs = 25 #25
 batchsize = 16

@@ -40,7 +40,7 @@ if gpu:
 		print(e)
 
 #initialize
-num_train = 33 #31
+num_train = 33 #35
 learn_rate = 1e-4 
 num_epochs = 25 #25
 batchsize = 16
@@ -113,7 +113,7 @@ newModel.add(Conv2D(filters=64, kernel_size=3, activation='relu'))
 newModel.add(Dropout(0.1))
 newModel.add(Flatten())
 newModel.add(Dense(128, activation='relu'))
-newModel.add(Dropout(0.05))
+newModel.add(Dropout(0.1))
 newModel.add(Dense(len(lb.classes_), activation='softmax'))
 
 # Model 2
