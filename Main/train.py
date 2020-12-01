@@ -39,7 +39,7 @@ if gpu:
 		print(e)
 
 #initialize
-num_train = 45 #25
+num_train = 46 #25
 learn_rate = 1e-5 
 num_epochs = 100 #25
 batchsize = 16
@@ -97,7 +97,7 @@ del gc.garbage[:]
 
 #load VGG16 network
 print("[INFO] load vgg16 model ...")
-baseModel = VGG16(weights='imagenet', include_top=False, input_shape=(224, 224, 1))
+baseModel = VGG16(weights='imagenet', include_top=False, input_shape=(224, 224, 3))
 
 # add callbacks for model
 print("[INFO] adding callbacks ...")
@@ -218,3 +218,5 @@ del gc.garbage[:]
 f = open(os.path.join(report_path, configure_file), 'a')
 f.write('Finish time: %s\n' % datetime.datetime.now())
 f.close()
+
+os.system('python train-copy.py')

@@ -1,6 +1,7 @@
 import os
 import sys
-
+import time
+from tqdm import tqdm
 # try:
 #     os.system('python loadimage.py')
 #     print('19')
@@ -30,7 +31,9 @@ try:
     os.system('python "train copy 2.py"')
     print('VGG16')
     os.system('python train.py')
-    os.system('shutdown -s -t 1')
+    for i in tqdm(range(300)):
+        time.sleep(1)
+    os.system('shutdown -s -t 300')
     # print('26')
     # os.system('python "train copy.py"')
     # print('27')

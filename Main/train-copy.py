@@ -39,11 +39,11 @@ if gpu:
 		print(e)
 
 #initialize
-num_train = 20
-learn_rate = 1e-4
-num_epochs = 50
+num_train = 47
+learn_rate = 1e-5
+num_epochs = 40
 batchsize = 16
-drop_out = 0.1
+drop_out = 0.2
 
 #file to save
 weight_final = 'modelActivity%02i.h5' % num_train
@@ -72,8 +72,8 @@ f.close()
 
 print("[INFO] load image ...")
 #load pickle of image and label
-X = pickle.loads(open(os.path.join(data_path, 'x2.pickle'), "rb").read())
-y = pickle.loads(open(os.path.join(data_path, 'y2.pickle'), "rb").read())
+X = pickle.loads(open(os.path.join(data_path, 'x5.pickle'), "rb").read())
+y = pickle.loads(open(os.path.join(data_path, 'y5.pickle'), "rb").read())
 
 # converting the list of image to numpy array
 X = np.array(X)
@@ -97,16 +97,16 @@ del gc.garbage[:]
 
 #load VGG16 network
 print("[INFO] load vgg16 model ...")
-baseModel = VGG16(weights='imagenet', include_top=False, input_shape=(224, 224, 3))
+baseModel = VGG16(weights='imagenet', include_top=False, input_shape=(224, 224, 1))
 
 # add callbacks for model
 print("[INFO] adding callbacks ...")
 time_callbacks = TimeHistory()
 model_callbacks =[
     #for earlystoping
-    EarlyStopping(monitor='val_accuracy', min_delta=0, patience=40, verbose=1, mode='auto'),
+    EarlyStopping(monitor='val_accuracy', patience=20, verbose=1, mode='auto'),
     #for check point
-    ModelCheckpoint(filepath=os.path.join(check_path, 'model.{epoch:02d}-{val_loss:.2f}.h5'), monitor='val_loss', verbose=1, save_best_only=False, save_weights_only=False, mode='auto'),
+    ModelCheckpoint(filepath=os.path.join(check_path, 'model.{epoch:02d}-{val_loss:.2f}.h5'), monitor='val_loss', verbose=1, save_best_only=True, save_weights_only=False, mode='auto'),
     #for record time
     time_callbacks
 ] 
