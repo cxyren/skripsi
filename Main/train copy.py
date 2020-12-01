@@ -40,11 +40,11 @@ if gpu:
 		print(e)
 
 #initialize
-num_train = 27 #25
-learn_rate = 1e-4 
+num_train = 30 #25
+learn_rate = 1e-5 
 num_epochs = 25 #25
 batchsize = 16
-drop_out = 0.4 #0.4
+drop_out = 0.1 #0.4
 
 #file to save
 weight_final = 'modelActivity%02i.h5' % num_train
@@ -89,6 +89,7 @@ y = lb.fit_transform(y)
 # #split data
 print("[INFO] splitting data ...")
 trainX, testX, trainY, testY = train_test_split(X, y, random_state = 42, test_size = 0.2, stratify = y)
+trainX, valX, trainY, valY = train_test_split(trainX, trainY, random_state = 42, test_size = 0.1, stratify = trainY)
 
 # #release memory
 del X
@@ -102,17 +103,16 @@ newModel.add(Conv2D(filters=32, kernel_size=3,activation='relu', input_shape=(22
 newModel.add(MaxPooling2D(pool_size=(3,3), strides=2))
 newModel.add(Conv2D(filters=32, kernel_size=3, activation='relu'))#64 stride 1
 newModel.add(MaxPooling2D(pool_size=(3,3), strides=2))
-# newModel.add(Dropout(0.2))
 newModel.add(Conv2D(filters=64, kernel_size=3, activation='relu'))
 newModel.add(MaxPooling2D(pool_size=(3,3), strides=2))
 newModel.add(Conv2D(filters=64, kernel_size=3, activation='relu'))
 # newModel.add(Conv2D(filters=64, kernel_size=3, activation='relu'))
 # newModel.add(Conv2D(filters=64, kernel_size=3, activation='relu'))
 # newModel.add(Conv2D(filters=64, kernel_size=3, activation='relu'))
-newModel.add(Dropout(0.1))
+newModel.add(Dropout(0.05))
 newModel.add(Flatten())
 newModel.add(Dense(128, activation='relu'))
-newModel.add(Dropout(0.1))
+newModel.add(Dropout(0.05))
 newModel.add(Dense(len(lb.classes_), activation='softmax'))
 
 # Model 2
@@ -158,8 +158,7 @@ H = newModel.fit(
     x=trainX,
     y=trainY,
     batch_size=batchsize,
-    validation_split=0.10,
-    shuffle=True,
+    validation_data=(valX, valY),
     epochs=num_epochs,
     callbacks=model_callbacks
     )
