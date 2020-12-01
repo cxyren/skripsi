@@ -24,10 +24,10 @@ import sys
 try:
     # os.system('python "../etc/crop-image.py"')
     # os.system('python loadimage.py')
-    print('25')
+    print('COPY')
+    os.system('python "train copy.py"')
+    print('COPY 2')
     os.system('python "train copy 2.py"')
-    # print('24')
-    # os.system('python "train copy 2.py"')
     # print('26')
     # os.system('python "train copy.py"')
     # print('27')
