@@ -55,6 +55,36 @@ def read_skeleton_file(filename):
     file.close()
     return bodyinfo
 
+def read_csv_file(df):
+	framecount = df['EventIndex'].iloc[-1] + 1
+  	bodyinfo = []
+	for i in range(int(framecount)):
+		body = {
+			"bodyID": df['SkeletonId'][i],
+			"handLeftConfidence": df['HandLeftConfidence'][i],
+			"handLeftState": df['HandLeftState'][i],
+			"handRightConfidence": df['HandRightConfidence'][i],
+			"handRightState": df['HandRightState'][i],
+			"time": df['Time'][i],
+			"joints": []
+		}
+		for j in range(25):
+			if j == 0:
+				joint={
+					"x": df['PositionX'][i],
+					"y": df['PositionY'][i],
+					"z": df['PositionZ'][i],
+				}
+			else:
+				joint={
+					"x": df['PositionX.%i'%j][i],
+					"y": df['PositionY.%i'%j][i],
+					"z": df['PositionZ.%i'%j][i],
+				}
+			body["joints"].append(joint)
+		bodyinfo.append(body)
+	return bodyinfo
+
 def bresenham_line(x0, y0, x1, y1):
     steep = abs(y1 - y0) > abs(x1 - x0)
     if steep:
@@ -126,10 +156,57 @@ print('[INFO] load skeleton ...')
 #read skeleton
 if input_skeleton.split('.')[1] == 'csv':
 	df = pd.read_csv(os.path.join(input_path, input_skeleton))
-	name_img = []
-	for i in tqdm(range(df.shape[0])):
-		#read skeleton here
-		print('ELLO')
+	bodyinfo = read_csv_file(df)
+	connecting_joint = [2, 1, 21, 3, 21, 5, 6, 7, 21, 9, 10, 11, 1, 13, 14, 15, 1, 17, 18, 19, 2, 8, 8, 12, 12]
+	height = 1080
+	width = 1920
+	#make blank images
+	frame = np.zeros(shape=[height, width, 3], dtype=np.uint8)
+	color = tuple(reversed([0,0,0]))
+	frame[:] = color
+	for i in range(len(bodyinfo)): 
+		for j in range(25):
+			try:
+				# red for line
+				rv = 255
+				gv = 0
+				bv = 0
+				#search for joint that connect
+				k = connecting_joint[j] - 1 
+				#get joint x and y
+				joint = bodyinfo[i]['joints'][j]
+			
+				dx = np.int32(round(float(joint['x'] * 4.016 * 100 + width/2)))
+				dy = np.int32(round(float( - joint['y'] * 4.016 * 100 + height/2)))
+				joint2 = bodyinfo[i]['joints'][k]
+				dx2 = np.int32(round(float(joint2['x'] * 4.016 * 100 + width/2)))
+				dy2 = np.int32(round(float( - joint2['y'] * 4.016 * 100 + height/2)))
+				#get pixel for the line 
+				line = bresenham_line(dx, dy, dx2, dy2)
+				#write line per pixel
+				for l in range(len(line)):
+					dx = line[l][0]
+					dy = line[l][1]
+					frame = cv2.circle(frame, (dx, dy), radius=2, color=(bv, gv, rv), thickness=-1)
+
+				#green color for points/ joints
+				rv = 0
+				gv = 255
+				bv = 0
+				#get x and y
+				joint = bodyinfo[i]['joints'][j]
+				dx = np.int32(round(float(joint['x'] * 4.016 * 100 + width/2)))
+				dy = np.int32(round(float( - joint['y'] * 4.016 * 100 + height/2)))
+				#write joint
+				frame = cv2.circle(frame, (dx, dy), radius=5, color=(bv, gv, rv), thickness=-1)
+			except:
+				#if theres error then break
+				check = True
+				break
+		#save file
+		filename = os.path.join(temp_path, "frame%i.jpg" % i)
+		# frame = cv2.resize(frame, (224, 224))
+		cv2.imwrite(filename, frame)
 if input_skeleton.split('.')[1] == 'skeleton':
 	bodyinfo = read_skeleton_file(os.path.join(input_path, input_skeleton))
 	for i in range(len(bodyinfo)):
