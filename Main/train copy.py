@@ -44,7 +44,7 @@ num_train = 34  #25
 learn_rate = 1e-4 
 num_epochs = 25 #25
 batchsize = 16
-drop_out = 0.1 #0.4
+drop_out = 0.2 #0.4
 
 #file to save
 weight_final = 'modelActivity%02i.h5' % num_train
@@ -107,12 +107,12 @@ newModel.add(Conv2D(filters=64, kernel_size=3, activation='relu'))
 newModel.add(MaxPooling2D(pool_size=(3,3), strides=2))
 newModel.add(Conv2D(filters=64, kernel_size=3, activation='relu'))
 newModel.add(Conv2D(filters=64, kernel_size=3, activation='relu'))
+newModel.add(Conv2D(filters=64, kernel_size=3, activation='relu'))
 # newModel.add(Conv2D(filters=64, kernel_size=3, activation='relu'))
-# newModel.add(Conv2D(filters=64, kernel_size=3, activation='relu'))
-newModel.add(Dropout(0.05))
+newModel.add(Dropout(0.1))
 newModel.add(Flatten())
 newModel.add(Dense(128, activation='relu'))
-newModel.add(Dropout(0.05))
+newModel.add(Dropout(0.1))
 newModel.add(Dense(len(lb.classes_), activation='softmax'))
 
 # Model 2
