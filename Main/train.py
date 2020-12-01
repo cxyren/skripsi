@@ -72,8 +72,8 @@ f.close()
 
 print("[INFO] load image ...")
 #load pickle of image and label
-X = pickle.loads(open(os.path.join(data_path, 'x3.pickle'), "rb").read())
-y = pickle.loads(open(os.path.join(data_path, 'y3.pickle'), "rb").read())
+X = pickle.loads(open(os.path.join(data_path, 'x5.pickle'), "rb").read())
+y = pickle.loads(open(os.path.join(data_path, 'y5.pickle'), "rb").read())
 
 # converting the list of image to numpy array
 X = np.array(X)
@@ -97,14 +97,14 @@ del gc.garbage[:]
 
 #load VGG16 network
 print("[INFO] load vgg16 model ...")
-baseModel = VGG16(weights='imagenet', include_top=False, input_shape=(224, 224, 30))
+baseModel = VGG16(weights='imagenet', include_top=False, input_shape=(224, 224, 1))
 
 # add callbacks for model
 print("[INFO] adding callbacks ...")
 time_callbacks = TimeHistory()
 model_callbacks =[
     #for earlystoping
-    EarlyStopping(monitor='val_accuracy', patience=5, verbose=1, mode='max'),
+    EarlyStopping(monitor='val_accuracy', patience=20, verbose=1, mode='auto'),
     #for check point
     ModelCheckpoint(filepath=os.path.join(check_path, 'model.{epoch:02d}-{val_loss:.2f}.h5'), monitor='val_loss', verbose=1, save_best_only=True, save_weights_only=False, mode='min'),
     #for record time

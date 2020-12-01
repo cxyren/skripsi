@@ -49,17 +49,17 @@ for i in tqdm(range(train.shape[0])):
         
         frame[int(center_y - center_y2):int(center_y + center_y2), int(0):int(224)] = img
         
-    # frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     #resize image
     frame = cv2.resize(frame, (224, 224))
     frame = np.expand_dims(frame, axis=2)  
-    # appending the image and the label into the list
-    temp_image.append(frame)
-    image_count = image_count + 1
-    if image_count > 9:
-        train_image_data.append([np.concatenate(temp_image, axis=2), train['class'][i]])
-        temp_image.clear()
-        image_count = 0
+    # # appending the image and the label into the list
+    # temp_image.append(frame)
+    # image_count = image_count + 1
+    # if image_count > 9:
+        # train_image_data.append([np.concatenate(temp_image, axis=2), train['class'][i]])
+        # temp_image.clear()
+        # image_count = 0
+    train_image_data.append([frame, train['class'][i]])
     del img 
 del train
 
@@ -76,10 +76,10 @@ for image, label in train_image_data:
 
 #saving data
 print("[INFO] saving image data ...")
-f = open(os.path.join(X_n_y_path, 'x4.pickle'), "wb")
+f = open(os.path.join(X_n_y_path, 'x5.pickle'), "wb")
 f.write(pickle.dumps(X))
 f.close()
 
-f = open(os.path.join(X_n_y_path, 'y4.pickle'), "wb")
+f = open(os.path.join(X_n_y_path, 'y5.pickle'), "wb")
 f.write(pickle.dumps(y))
 f.close()

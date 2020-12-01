@@ -4,7 +4,7 @@ from keras.layers import Dense, Input, Dropout, Flatten, MaxPooling2D, Conv2D
 from keras.applications.vgg16 import VGG16
 from keras.preprocessing.image import ImageDataGenerator
 from keras.callbacks import ModelCheckpoint, EarlyStopping, Callback
-from keras.optimizers import Adam, SGD
+from keras.optimizers import Adam
 import keras
 import cv2
 import numpy as np
@@ -40,11 +40,11 @@ if gpu:
 		print(e)
 
 #initialize
-num_train = 39  #25
-learn_rate = 1e-4 
+num_train = 41  #25
+learn_rate = 1e-4
 num_epochs = 100 #25
 batchsize = 16
-drop_out = 0.2 #0.4
+drop_out = 0 #0.4
 
 #file to save
 weight_final = 'modelActivity%02i.h5' % num_train
@@ -99,18 +99,18 @@ del gc.garbage[:]
 
 newModel = Sequential()
 # Model 1
-newModel.add(Conv2D(filters=32, kernel_size=3, input_shape=(224,224,10))) #32
+newModel.add(Conv2D(filters=32, kernel_size=3, input_shape=(224,224,10), activation='relu')) #32
 newModel.add(MaxPooling2D(pool_size=(3,3), strides=2))
-newModel.add(Conv2D(filters=32, kernel_size=3))#64 stride 1
+newModel.add(Conv2D(filters=32, kernel_size=3, activation='relu'))#64 stride 1
 newModel.add(MaxPooling2D(pool_size=(3,3), strides=2))
-newModel.add(Conv2D(filters=64, kernel_size=3))
+newModel.add(Conv2D(filters=64, kernel_size=3, activation='relu'))
 newModel.add(MaxPooling2D(pool_size=(3,3), strides=2))
-newModel.add(Conv2D(filters=64, kernel_size=3))
+newModel.add(Conv2D(filters=64, kernel_size=3, activation='relu'))
 # newModel.add(Conv2D(filters=64, kernel_size=3, activation='relu'))
-newModel.add(Dropout(0.1))
+# newModel.add(Dropout(0.2))
 newModel.add(Flatten())
 newModel.add(Dense(128, activation='relu'))
-newModel.add(Dropout(0.1))
+# newModel.add(Dropout(0.2))
 newModel.add(Dense(len(lb.classes_), activation='softmax'))
 
 # Model 2
@@ -129,7 +129,7 @@ print("[INFO] adding callbacks ...")
 time_callbacks = TimeHistory()
 model_callbacks =[
     #for earlystoping
-    EarlyStopping(monitor='val_accuracy', patience=10, verbose=1, mode='auto'),
+    EarlyStopping(monitor='val_accuracy', patience=20, verbose=1, mode='auto'),
     #for check point
     ModelCheckpoint(filepath=os.path.join(check_path, 'model.{epoch:02d}-{val_loss:.2f}.h5'), monitor='val_loss', verbose=1, save_best_only=True, save_weights_only=False, mode='auto'),
     #for record time
@@ -144,7 +144,7 @@ with open(os.path.join(report_path, summary_file),'w') as fh:
 
 # # compile model
 print("[INFO] compiling ...")
-newModel.compile(optimizer=SGD(learning_rate=learn_rate), loss='categorical_crossentropy', metrics=['accuracy'])
+newModel.compile(optimizer=Adam(learning_rate=learn_rate), loss='categorical_crossentropy', metrics=['accuracy'])
 
 # release memory again
 gc.collect()
