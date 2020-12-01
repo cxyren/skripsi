@@ -96,10 +96,6 @@ del y
 gc.collect()
 del gc.garbage[:] 
 
-#load VGG16 network
-# print("[INFO] load vgg16 model ...")
-# baseModel = VGG16(weights='imagenet', include_top=False, input_shape=(224, 224, 3))
-
 newModel = Sequential()
 # Model 1
 newModel.add(Conv2D(filters=64, kernel_size=7, strides=(3,3), activation='relu', input_shape=(224,224,30))) #32
@@ -139,23 +135,6 @@ model_callbacks =[
     time_callbacks
 ] 
 
-# # fullly connected layer configuration
-# print("[INFO] configure fully connected layer ...")
-# headModel = baseModel.output
-# headModel = AveragePooling2D(pool_size=(2, 2))(headModel)
-# headModel = Flatten(input_shape=baseModel.output_shape[1:])(headModel)
-# headModel = Dense(512, activation='relu')(headModel)
-# headModel = Dropout(drop_out)(headModel) #coba
-# headModel = Dense(len(lb.classes_), activation='softmax')(headModel)
-
-# # setting up model
-print("[INFO] setting up model ...")
-# model = Model(inputs=baseModel.input, outputs=headModel)
-
-# # freeze base model trainable parameters
-# for layer in baseModel.layers:
-#     layer.trainable = False
-
 # writing summary
 print("[INFO] writing summary ...")
 with open(os.path.join(report_path, summary_file),'w') as fh:
@@ -166,9 +145,9 @@ with open(os.path.join(report_path, summary_file),'w') as fh:
 print("[INFO] compiling ...")
 newModel.compile(optimizer=Adam(learning_rate=learn_rate), loss='categorical_crossentropy', metrics=['accuracy'])
 
-# # release memory again
-# gc.collect()
-# del gc.garbage[:] 
+# release memory again
+gc.collect()
+del gc.garbage[:] 
 
 # #train the head of the network for a few epochs (all other layers are frozen) -- this will allow the new FC layers to start to become initialized with actual "learned" values versus pure random
 print("[INFO] training ...")
