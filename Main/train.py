@@ -39,9 +39,9 @@ if gpu:
 		print(e)
 
 #initialize
-num_train = 25 #25
+num_train = 45 #25
 learn_rate = 1e-5 
-num_epochs = 25 #25
+num_epochs = 100 #25
 batchsize = 16
 drop_out = 0 #0.4
 
@@ -117,7 +117,7 @@ headModel = baseModel.output
 headModel = AveragePooling2D(pool_size=(2, 2))(headModel)
 headModel = Flatten(input_shape=baseModel.output_shape[1:])(headModel)
 headModel = Dense(512, activation='relu')(headModel)
-headModel = Dropout(drop_out)(headModel) #coba
+# headModel = Dropout(drop_out)(headModel) #coba
 headModel = Dense(len(lb.classes_), activation='softmax')(headModel)
 
 # setting up model
