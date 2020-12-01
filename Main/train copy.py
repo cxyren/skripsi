@@ -99,7 +99,7 @@ del gc.garbage[:]
 
 newModel = Sequential()
 # Model 1
-newModel.add(Conv2D(filters=32, kernel_size=3,activation='relu', input_shape=(224,224,30))) #32
+newModel.add(Conv2D(filters=32, kernel_size=3,activation='relu', input_shape=(224,224,10))) #32
 newModel.add(MaxPooling2D(pool_size=(3,3), strides=2))
 newModel.add(Conv2D(filters=32, kernel_size=3, activation='relu'))#64 stride 1
 newModel.add(MaxPooling2D(pool_size=(3,3), strides=2))
