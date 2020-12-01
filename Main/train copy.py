@@ -1,6 +1,6 @@
 import os
 from keras.models import Model, Sequential
-from keras.layers import Dense, Input, Dropout, Flatten, AveragePooling2D, Conv2D
+from keras.layers import Dense, Input, Dropout, Flatten, MaxPooling2D, Conv2D
 from keras.applications.vgg16 import VGG16
 from keras.preprocessing.image import ImageDataGenerator
 from keras.callbacks import ModelCheckpoint, EarlyStopping, Callback
@@ -40,7 +40,7 @@ if gpu:
 		print(e)
 
 #initialize
-num_train = 26 #25
+num_train = 27 #25
 learn_rate = 1e-4 
 num_epochs = 25 #25
 batchsize = 16
@@ -98,12 +98,15 @@ del gc.garbage[:]
 
 newModel = Sequential()
 # Model 1
-newModel.add(Conv2D(filters=64, kernel_size=7, strides=(3,3), activation='relu', input_shape=(224,224,30))) #32
-newModel.add(Conv2D(filters=128, kernel_size=5, activation='relu'))#64 stride 1
+newModel.add(Conv2D(filters=32, kernel_size=3,activation='relu', input_shape=(224,224,30))) #32
+newModel.add(MaxPooling2D(pool_size=(3,3), strides=2))
+newModel.add(Conv2D(filters=32, kernel_size=3, activation='relu'))#64 stride 1
+newModel.add(MaxPooling2D(pool_size=(3,3), strides=2))
 # newModel.add(Dropout(0.2))
 newModel.add(Conv2D(filters=64, kernel_size=3, activation='relu'))
+newModel.add(MaxPooling2D(pool_size=(3,3), strides=2))
 newModel.add(Conv2D(filters=64, kernel_size=3, activation='relu'))
-newModel.add(Conv2D(filters=64, kernel_size=3, activation='relu'))
+# newModel.add(Conv2D(filters=64, kernel_size=3, activation='relu'))
 # newModel.add(Conv2D(filters=64, kernel_size=3, activation='relu'))
 # newModel.add(Conv2D(filters=64, kernel_size=3, activation='relu'))
 newModel.add(Dropout(0.1))
