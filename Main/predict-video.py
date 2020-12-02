@@ -209,6 +209,52 @@ if input_skeleton.split('.')[1] == 'csv':
 				#if theres error then break
 				check = True
 				break
+		left = 9999
+		right = -1
+		bot = 0
+
+		for j in range(frame.shape[1]):
+			for k in range(frame.shape[0]):
+				if all(l > 0 for l in img[k,j]):
+					if k > bot:
+						bot = k
+					if j < left:
+						left = j
+					if j > right:
+						right = j
+
+		right = right + 2
+		left = left - 2
+		bot = bot + 2
+		top = bot - 165
+
+		img = frame[int(top):int(bot), int(left):int(right)]
+		
+		frame = np.zeros(shape=[224, 224], dtype=np.uint8)
+
+		if img.shape[1] < img.shape[0]:
+			img = cv2.resize(img, (int(img.shape[1]*(224/img.shape[0])), 224))
+			
+
+			#relocating image
+			center_x = frame.shape[1] / 2
+			center_x2 = img.shape[1] / 2
+			
+			frame[int(0):int(224), int(center_x - center_x2):int(center_x + center_x2)] = img
+		else:
+			img = cv2.resize(img, (224, int(img.shape[0]*(224/img.shape[1]))))
+
+			#relocating image
+			center_y = frame.shape[0] / 2
+			center_y2 = img.shape[0] / 2
+			
+			frame[int(center_y - center_y2):int(center_y + center_y2), int(0):int(224)] = img
+        
+		#resize image
+		frame = cv2.resize(frame, (224, 224))
+		frame = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
+		frame = frame.astype('float64')
+		frame *= 255.0/frame.max() 
 		#save file
 		filename = os.path.join(temp_path, "frame%i.jpg" % i)
 		# frame = cv2.resize(frame, (224, 224))
