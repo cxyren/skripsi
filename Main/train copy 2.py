@@ -40,7 +40,7 @@ if gpu:
 		print(e)
 
 #initialize
-num_train = 49
+num_train = 46
 learn_rate = 1e-5 
 num_epochs = 100 #25
 batchsize = 16
@@ -108,9 +108,9 @@ newModel.add(Conv2D(filters=256, kernel_size=3, activation='relu'))
 newModel.add(Conv2D(filters=256, kernel_size=3, activation='relu'))
 # newModel.add(Dropout(0.15))
 newModel.add(Conv2D(filters=512, kernel_size=3, activation='relu'))
-newModel.add(Conv2D(filters=512, kernel_size=3, activation='relu'))
-newModel.add(Conv2D(filters=512, kernel_size=3, activation='relu'))
-newModel.add(Dropout(0.2))
+# newModel.add(Conv2D(filters=512, kernel_size=3, activation='relu'))
+# newModel.add(Conv2D(filters=512, kernel_size=3, activation='relu'))
+newModel.add(Dropout(0.1))
 newModel.add(Flatten())
 newModel.add(Dense(128, activation='relu'))
 newModel.add(Dropout(0.05))

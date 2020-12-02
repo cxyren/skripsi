@@ -4,6 +4,7 @@ from tqdm import tqdm
 from glob import glob
 import pandas as pd
 import numpy as np
+import math
 import pickle
 import cv2
 import os
@@ -123,7 +124,7 @@ def bresenham_line(x0, y0, x1, y1):
     return line
 
 #initialize
-num_model = 18
+num_model = 45
 count = len(glob('D:/user/Documents/Skripsi/Output/*')) + 1
 model_path = 'D:/user/Documents/Skripsi/Model/'
 temp_path = 'D:/user/Documents/Skripsi/Input/Temp/'
@@ -142,14 +143,15 @@ print(os.path.join(model_path, model_file))
 model = load_model(os.path.join(model_path, model_file), compile=False)
 lb = pickle.loads(open(os.path.join(model_path, label_file), "rb").read())
 
-Q = deque(maxlen=size)
-
 #class that been used
 name_class = pd.read_csv('D:/user/Documents/Skripsi/Dataset/class_name_new.csv')
 
+y_true = []
 activity = dict()
 for i in range(name_class.shape[0]):
 	activity[name_class['name'][i]] = 0
+	if input_skeleton.split('.')[0][-2:] == name_class['code'][i][-2:]:
+		y_true.append(name_class['name'][i])
 
 # load skeleton
 print('[INFO] load skeleton ...')
@@ -207,7 +209,7 @@ if input_skeleton.split('.')[1] == 'csv':
 		filename = os.path.join(temp_path, "frame%i.jpg" % i)
 		# frame = cv2.resize(frame, (224, 224))
 		cv2.imwrite(filename, frame)
-if input_skeleton.split('.')[1] == 'skeleton':
+elif input_skeleton.split('.')[1] == 'skeleton':
 	bodyinfo = read_skeleton_file(os.path.join(input_path, input_skeleton))
 	for i in range(len(bodyinfo)):
 		frame = np.zeros(shape=[1080, 1920, 3], dtype=np.uint8)
@@ -255,55 +257,121 @@ writer = None
 
 images = glob(os.path.join(temp_path, '*'))
 
-# loop over frames from the video file stream
-print('[INFO] loop over frames ...')
-for i in range(len(images)):
-	# read the next frame from the file
-	frame = cv2.imread(images[i])
+if num_model < 21 and num_model > 1 :
+	
+	Q = deque(maxlen=size)
+	# loop over frames from the video file stream
+	print('[INFO] loop over frames ...')
+	for i in range(len(images)):
+		# read the next frame from the file
+		frame = cv2.imread(images[i])
 
-	# if the frame dimensions are empty, grab them
-	if W is None or H is None:
-		(H, W) = frame.shape[:2]
+		# if the frame dimensions are empty, grab them
+		if W is None or H is None:
+			(H, W) = frame.shape[:2]
 
-	# clone the output frame, then convert it from BGR to RGB
-	# ordering, resize the frame to a fixed 224x224
-	output = frame.copy()
-	frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-	frame = cv2.resize(frame, (224, 224)).astype('float32')
+		# clone the output frame, then convert it from BGR to RGB
+		# ordering, resize the frame to a fixed 224x224
+		output = frame.copy()
+		frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+		frame = cv2.resize(frame, (224, 224)).astype('float32')
 
-	# make predictions on the frame and then update the predictions
-	# queue
-	preds = model.predict(np.expand_dims(frame, axis=0))[0]
-	Q.append(preds)
+		# make predictions on the frame and then update the predictions
+		# queue
+		preds = model.predict(np.expand_dims(frame, axis=0))[0]
+		Q.append(preds)
 
-	# perform prediction averaging over the current history of
-	# previous predictions
-	results = np.array(Q).mean(axis=0)
-	i = np.argmax(results)
-	label = lb.classes_[i]
+		# perform prediction averaging over the current history of
+		# previous predictions
+		results = np.array(Q).mean(axis=0)
+		i = np.argmax(results)
+		label = lb.classes_[i]
 
-	# draw the activity on the output frame
-	text = 'activity: {}'.format(label)
+		# draw the activity on the output frame
+		text = 'activity: {}'.format(label)
+		activity[label] = activity[label] + 1
+		cv2.putText(output, text, (10, 25), cv2.FONT_HERSHEY_PLAIN,
+			1.5, (255, 255, 255), 3)
+
+		# check if the video writer is None
+		if writer is None:
+			# initialize our video writer
+			fourcc = cv2.VideoWriter_fourcc(*'MJPG')
+			writer = cv2.VideoWriter(os.path.join(output_path, output_video), fourcc, 30,
+				(W, H), True)
+
+		# write the output frame to disk
+		writer.write(output)
+
+		# show the output image
+		key = cv2.waitKey(1) & 0xFF
+
+		# if the `q` key was pressed, break from the loop
+		if key == ord('q'):
+			break
+else:
+	count = math.floor(float(len(images) - 5) / 10)
+
+    framecount = 0
+	temp_image = []
+	test_image = []
+	# loop over frames from the video file stream
+	print('[INFO] loop over frames ...')
+	for i in range(len(images)):
+		
+		# read the next frame from the file
+		frame = cv2.imread(images[i])
+
+		# if the frame dimensions are empty, grab them
+		if W is None or H is None:
+			(H, W) = frame.shape[:2]
+
+		# clone the output frame, then convert it from BGR to RGB
+		# ordering, resize the frame to a fixed 224x224
+		output = frame.copy()
+		frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+		frame = cv2.resize(frame, (224, 224)).astype('float32')
+
+		if (i - 5) % count == 0 :
+			framecount = framecount + 1
+			frame = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
+			frame = np.expand_dims(frame, axis=2)  
+			temp_image.append(frame)
+			
+		# draw the activity on the output frame
+		cv2.putText(output, text, (10, 25), cv2.FONT_HERSHEY_PLAIN,
+			1.5, (255, 255, 255), 3)
+
+		# check if the video writer is None
+		if writer is None:
+			# initialize our video writer
+			fourcc = cv2.VideoWriter_fourcc(*'MJPG')
+			writer = cv2.VideoWriter(os.path.join(output_path, output_video), fourcc, 30,
+				(W, H), True)
+
+		# write the output frame to disk
+		writer.write(output)
+
+		# show the output image
+		key = cv2.waitKey(1) & 0xFF
+
+		# if the `q` key was pressed, break from the loop
+		if key == ord('q'):
+			break
+
+	preds = model.predict(np.concatenate(temp_image, axis=2))[0]
+	label = lb.classes_[preds]
 	activity[label] = activity[label] + 1
-	cv2.putText(output, text, (10, 25), cv2.FONT_HERSHEY_PLAIN,
-		1.5, (255, 255, 255), 3)
 
-	# check if the video writer is None
-	if writer is None:
-		# initialize our video writer
-		fourcc = cv2.VideoWriter_fourcc(*'MJPG')
-		writer = cv2.VideoWriter(os.path.join(output_path, output_video), fourcc, 30,
-			(W, H), True)
 
-	# write the output frame to disk
-	writer.write(output)
 
-	# show the output image
-	key = cv2.waitKey(1) & 0xFF
-
-	# if the `q` key was pressed, break from the loop
-	if key == ord('q'):
-		break
+tn, fp, fn, tp = confusion_matrix(y_true, max(activity, key=activity.get)).ravel()
+f = open(os.path.join(output_path, 'report%02i.txt' %count), 'w')
+f.write('TN: %i\n' %tn)
+f.write('FP: %i\n' %fp)
+f.write('FN: %i\n' %fn)
+f.write('TP: %i\n' %tp)
+f.close()
 
 #result
 print(activity)
@@ -314,5 +382,5 @@ print('ACTIVITY: ' + max(activity, key=activity.get))
 # release the file pointers
 print('[INFO] cleaning up...')
 writer.release()
-for f in images:
-    os.remove(f)
+# for f in images:
+#     os.remove(f)

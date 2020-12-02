@@ -40,8 +40,8 @@ if gpu:
 		print(e)
 
 #initialize
-num_train = 44  #25
-learn_rate = 1e-4
+num_train = 49  #25
+learn_rate = 1e-5
 num_epochs = 100 #25
 batchsize = 16
 drop_out = 0 #0.4
@@ -98,30 +98,30 @@ gc.collect()
 del gc.garbage[:] 
 
 newModel = Sequential()
-# Model 1
-newModel.add(Conv2D(filters=32, kernel_size=3, input_shape=(224,224,10), activation='relu')) #32
-newModel.add(MaxPooling2D(pool_size=(3,3), strides=2))
-newModel.add(Conv2D(filters=32, kernel_size=3, activation='relu'))#64 stride 1
-newModel.add(MaxPooling2D(pool_size=(3,3), strides=2))
-newModel.add(Conv2D(filters=64, kernel_size=3, activation='relu'))
-newModel.add(MaxPooling2D(pool_size=(3,3), strides=2))
-newModel.add(Conv2D(filters=64, kernel_size=3, activation='relu'))
+# # Model 1
+# newModel.add(Conv2D(filters=32, kernel_size=3, input_shape=(224,224,10), activation='relu')) #32
+# newModel.add(MaxPooling2D(pool_size=(3,3), strides=2))
+# newModel.add(Conv2D(filters=32, kernel_size=3, activation='relu'))#64 stride 1
+# newModel.add(MaxPooling2D(pool_size=(3,3), strides=2))
 # newModel.add(Conv2D(filters=64, kernel_size=3, activation='relu'))
-# newModel.add(Dropout(0.2))
-newModel.add(Flatten())
-newModel.add(Dense(128, activation='relu'))
-# newModel.add(Dropout(0.2))
-newModel.add(Dense(len(lb.classes_), activation='softmax'))
-
-# Model 2
-# newModel.add(Conv2D(filters=32, kernel_size=7, strides=(3,3), activation='relu', input_shape=(224,224,30)))
-# newModel.add(Conv2D(filters=64, kernel_size=5, activation='relu'))
+# newModel.add(MaxPooling2D(pool_size=(3,3), strides=2))
 # newModel.add(Conv2D(filters=64, kernel_size=3, activation='relu'))
-# newModel.add(Dropout(0.1))
+# # newModel.add(Conv2D(filters=64, kernel_size=3, activation='relu'))
+# # newModel.add(Dropout(0.2))
 # newModel.add(Flatten())
 # newModel.add(Dense(128, activation='relu'))
-# newModel.add(Dropout(0.1))
+# # newModel.add(Dropout(0.2))
 # newModel.add(Dense(len(lb.classes_), activation='softmax'))
+
+# Model 2
+newModel.add(Conv2D(filters=32, kernel_size=7, strides=(3,3), activation='relu', input_shape=(224,224,30)))
+newModel.add(Conv2D(filters=64, kernel_size=5, activation='relu'))
+newModel.add(Conv2D(filters=64, kernel_size=3, activation='relu'))
+newModel.add(Dropout(0.2))
+newModel.add(Flatten())
+newModel.add(Dense(128, activation='relu'))
+newModel.add(Dropout(0.1))
+newModel.add(Dense(len(lb.classes_), activation='softmax'))
 
 
 # # add callbacks for model
