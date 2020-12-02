@@ -39,7 +39,7 @@ if gpu:
 		print(e)
 
 #initialize
-num_train = 50 #25
+num_train = 0 #25
 learn_rate = 1e-5 
 num_epochs = 40 #25
 batchsize = 16
@@ -104,7 +104,7 @@ print("[INFO] adding callbacks ...")
 time_callbacks = TimeHistory()
 model_callbacks =[
     #for earlystoping
-    EarlyStopping(monitor='val_accuracy', patience=20, verbose=1, mode='auto'),
+    # EarlyStopping(monitor='val_accuracy', patience=20, verbose=1, mode='auto'),
     #for check point
     ModelCheckpoint(filepath=os.path.join(check_path, 'model.{epoch:02d}-{val_loss:.2f}.h5'), monitor='val_loss', verbose=1, save_best_only=True, save_weights_only=False, mode='min'),
     #for record time
