@@ -114,7 +114,7 @@ newModel = Sequential()
 # newModel.add(Dense(len(lb.classes_), activation='softmax'))
 
 # Model 2
-newModel.add(Conv2D(filters=32, kernel_size=7, strides=(3,3), activation='relu', input_shape=(224,224,30)))
+newModel.add(Conv2D(filters=32, kernel_size=7, strides=(3,3), activation='relu', input_shape=(224,224,10)))
 newModel.add(Conv2D(filters=64, kernel_size=5, activation='relu'))
 newModel.add(Conv2D(filters=64, kernel_size=3, activation='relu'))
 newModel.add(Dropout(0.2))
