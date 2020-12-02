@@ -368,6 +368,8 @@ activity[label] = activity[label] + 1
 
 tn, fp, fn, tp = confusion_matrix(y_true, max(activity, key=activity.get)).ravel()
 f = open(os.path.join(output_path, 'report%s.txt' %input_skeleton.split('.')[0]), 'w')
+f.write('Actual: %s\n' %y_true)
+f.write('Predict: %s\n' %max(activity, key=activity.get))
 f.write('TN: %i\n' %tn)
 f.write('FP: %i\n' %fp)
 f.write('FN: %i\n' %fn)

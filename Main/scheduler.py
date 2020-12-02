@@ -66,8 +66,8 @@ try:
        '11':46,
        '12':47,
    }
-   for i in range(5):
-       for j in range(13):
+   for i in range(1):
+       for j in range(1):
             os.system('python predict-video.py S0%iA%02i'%(subject.get(i), activity.get(j)))
 except Exception as e:
     print(e)
