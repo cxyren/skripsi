@@ -40,7 +40,7 @@ if gpu:
 		print(e)
 
 #initialize
-num_train = 45
+num_train = 47
 learn_rate = 1e-5 
 num_epochs = 100 #25
 batchsize = 16
@@ -101,15 +101,15 @@ del gc.garbage[:]
 print("[INFO] setting up model ...")
 newModel = Sequential()
 # Model 1
-newModel.add(Conv2D(filters=128, kernel_size=7, strides=(3,3), activation='relu', input_shape=(224,224,10))) #32
-newModel.add(Conv2D(filters=256, kernel_size=5, strides=(2,2), activation='relu'))#64 stride 1
+newModel.add(Conv2D(filters=64, kernel_size=7, strides=(3,3), activation='relu', input_shape=(224,224,10))) #32
+newModel.add(Conv2D(filters=128, kernel_size=5, activation='relu'))#64 stride 1
 newModel.add(Dropout(0.2))
-newModel.add(Conv2D(filters=256, kernel_size=3, activation='relu'))
-newModel.add(Conv2D(filters=256, kernel_size=3, activation='relu'))
+newModel.add(Conv2D(filters=128, kernel_size=3, activation='relu'))
+newModel.add(Conv2D(filters=128, kernel_size=3, activation='relu'))
 newModel.add(Dropout(0.15))
-newModel.add(Conv2D(filters=512, kernel_size=3, activation='relu'))
-newModel.add(Conv2D(filters=512, kernel_size=3, activation='relu'))
-newModel.add(Conv2D(filters=512, kernel_size=3, activation='relu'))
+newModel.add(Conv2D(filters=256, kernel_size=3, activation='relu'))
+newModel.add(Conv2D(filters=256, kernel_size=3, activation='relu'))
+newModel.add(Conv2D(filters=256, kernel_size=3, activation='relu'))
 newModel.add(Dropout(0.1))
 newModel.add(Flatten())
 newModel.add(Dense(128, activation='relu'))

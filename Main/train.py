@@ -114,10 +114,10 @@ model_callbacks =[
 # fullly connected layer configuration
 print("[INFO] configure fully connected layer ...")
 headModel = baseModel.output
-headModel = AveragePooling2D(pool_size=(2, 2))(headModel)
+# headModel = AveragePooling2D(pool_size=(2, 2))(headModel)
 headModel = Flatten(input_shape=baseModel.output_shape[1:])(headModel)
 headModel = Dense(512, activation='relu')(headModel)
-# headModel = Dropout(drop_out)(headModel) #coba
+headModel = Dropout(drop_out)(headModel) #coba
 headModel = Dense(len(lb.classes_), activation='softmax')(headModel)
 
 # setting up model
@@ -218,5 +218,3 @@ del gc.garbage[:]
 f = open(os.path.join(report_path, configure_file), 'a')
 f.write('Finish time: %s\n' % datetime.datetime.now())
 f.close()
-
-os.system('python train-copy.py')

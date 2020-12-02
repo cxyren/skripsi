@@ -97,7 +97,7 @@ del gc.garbage[:]
 
 #load VGG16 network
 print("[INFO] load vgg16 model ...")
-baseModel = VGG16(weights='imagenet', include_top=False, input_shape=(224, 224, 1))
+baseModel = VGG16(weights='imagenet', include_top=False, input_shape=(224, 224, 3))
 
 # add callbacks for model
 print("[INFO] adding callbacks ...")
