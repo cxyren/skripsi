@@ -59,7 +59,7 @@ def read_skeleton_file(filename):
 
 def read_csv_file(df):
 	framecount = df['EventIndex'].iloc[-1] + 1
-  	bodyinfo = []
+	bodyinfo = []
 	for i in range(int(framecount)):
 		body = {
 			"bodyID": df['SkeletonId'][i],
@@ -125,7 +125,7 @@ def bresenham_line(x0, y0, x1, y1):
     return line
 
 #initialize
-num_model = 45
+num_model = 50
 count = len(glob('D:/user/Documents/Skripsi/Output/*')) + 1
 model_path = 'D:/user/Documents/Skripsi/Model/'
 temp_path = 'D:/user/Documents/Skripsi/Input/Temp/'
@@ -141,7 +141,7 @@ connecting_joint = [2, 1, 21, 3, 21, 5, 6, 7, 21, 9, 10, 11, 1, 13, 14, 15, 1, 1
 # load the trained model and label from disk
 print('[INFO] loading model and label ...')
 print(os.path.join(model_path, model_file))
-model = load_model(os.path.join(model_path, model_file), compile=False)
+model = load_model(os.path.join(model_path, model_file))
 lb = pickle.loads(open(os.path.join(model_path, label_file), "rb").read())
 
 #class that been used
@@ -154,6 +154,7 @@ for i in range(name_class.shape[0]):
 	if input_skeleton.split('.')[0][-2:] == name_class['code'][i][-2:]:
 		y_true.append(name_class['name'][i])
 
+print(input_skeleton)
 # load skeleton
 print('[INFO] load skeleton ...')
 #read skeleton
@@ -164,10 +165,10 @@ if input_skeleton.split('.')[1] == 'csv':
 	height = 1080
 	width = 1920
 	#make blank images
-	frame = np.zeros(shape=[height, width, 3], dtype=np.uint8)
-	color = tuple(reversed([0,0,0]))
-	frame[:] = color
 	for i in range(len(bodyinfo)): 
+		frame = np.zeros(shape=[height, width, 3], dtype=np.uint8)
+		color = tuple(reversed([0,0,0]))
+		frame[:] = color
 		for j in range(25):
 			try:
 				# red for line
@@ -258,77 +259,18 @@ writer = None
 
 images = glob(os.path.join(temp_path, '*'))
 
-# if num_model < 21 and num_model > 1 :
-	
-# 	Q = deque(maxlen=size)
-# 	# loop over frames from the video file stream
-# 	print('[INFO] loop over frames ...')
-# 	for i in range(len(images)):
-# 		# read the next frame from the file
-# 		frame = cv2.imread(images[i])
-
-# 		# if the frame dimensions are empty, grab them
-# 		if W is None or H is None:
-# 			(H, W) = frame.shape[:2]
-
-# 		# clone the output frame, then convert it from BGR to RGB
-# 		# ordering, resize the frame to a fixed 224x224
-# 		output = frame.copy()
-# 		frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-# 		frame = cv2.resize(frame, (224, 224)).astype('float32')
-
-# 		# make predictions on the frame and then update the predictions
-# 		# queue
-# 		preds = model.predict(np.expand_dims(frame, axis=0))[0]
-# 		Q.append(preds)
-
-# 		# perform prediction averaging over the current history of
-# 		# previous predictions
-# 		results = np.array(Q).mean(axis=0)
-# 		i = np.argmax(results)
-# 		label = lb.classes_[i]
-
-# 		# draw the activity on the output frame
-# 		text = 'activity: {}'.format(label)
-# 		activity[label] = activity[label] + 1
-# 		cv2.putText(output, text, (10, 25), cv2.FONT_HERSHEY_PLAIN,
-# 			1.5, (255, 255, 255), 3)
-
-# 		# check if the video writer is None
-# 		if writer is None:
-# 			# initialize our video writer
-# 			fourcc = cv2.VideoWriter_fourcc(*'MJPG')
-# 			writer = cv2.VideoWriter(os.path.join(output_path, output_video), fourcc, 30,
-# 				(W, H), True)
-
-# 		# write the output frame to disk
-# 		writer.write(output)
-
-# 		# show the output image
-# 		key = cv2.waitKey(1) & 0xFF
-
-# 		# if the `q` key was pressed, break from the loop
-# 		if key == ord('q'):
-# 			break
-# else:
 count = math.floor(float(len(images) - 5) / 10)
 
 framecount = 0
 temp_image = []
 test_image = []
+print(count)
 # loop over frames from the video file stream
 print('[INFO] loop over frames ...')
 for i in range(len(images)):
-	
 	# read the next frame from the file
 	frame = cv2.imread(images[i])
 
-	# if the frame dimensions are empty, grab them
-	if W is None or H is None:
-		(H, W) = frame.shape[:2]
-
-	# clone the output frame, then convert it from BGR to RGB
-	# ordering, resize the frame to a fixed 224x224
 	output = frame.copy()
 	frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 	frame = cv2.resize(frame, (224, 224)).astype('float32')
@@ -338,29 +280,11 @@ for i in range(len(images)):
 		frame = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
 		frame = np.expand_dims(frame, axis=2)  
 		temp_image.append(frame)
-		
-	# draw the activity on the output frame
-	cv2.putText(output, text, (10, 25), cv2.FONT_HERSHEY_PLAIN,
-		1.5, (255, 255, 255), 3)
 
-	# check if the video writer is None
-	if writer is None:
-		# initialize our video writer
-		fourcc = cv2.VideoWriter_fourcc(*'MJPG')
-		writer = cv2.VideoWriter(os.path.join(output_path, output_video), fourcc, 30,
-			(W, H), True)
+testX = np.concatenate(temp_image, axis=2)
+testX = np.array(image)
 
-	# write the output frame to disk
-	writer.write(output)
-
-	# show the output image
-	key = cv2.waitKey(1) & 0xFF
-
-	# if the `q` key was pressed, break from the loop
-	if key == ord('q'):
-		break
-
-preds = model.predict(np.concatenate(temp_image, axis=2))[0]
+preds = model.predict(testX.astype('float32'))[0]
 label = lb.classes_[preds]
 activity[label] = activity[label] + 1
 
@@ -384,6 +308,5 @@ print('ACTIVITY: ' + max(activity, key=activity.get))
 
 # release the file pointers
 print('[INFO] cleaning up...')
-writer.release()
 # for f in images:
 #     os.remove(f)
