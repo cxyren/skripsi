@@ -131,11 +131,13 @@ model_path = 'D:/user/Documents/Skripsi/Model/'
 temp_path = 'D:/user/Documents/Skripsi/Input/Temp/'
 model_file = 'modelActivity%02i.h5' % num_model
 label_file = 'lb%02i.pickle' % num_model
-input_path = 'D:/user/Documents/Skripsi/Input/'
+input_path = 'D:/user/Documents/Skripsi/Input/CSV/'
 input_skeleton = sys.argv[1]
 output_path = 'D:/user/Documents/Skripsi/Output/'
 output_video = 'Output%02i.avi' % count
+
 size = 128
+
 connecting_joint = [2, 1, 21, 3, 21, 5, 6, 7, 21, 9, 10, 11, 1, 13, 14, 15, 1, 17, 18, 19, 2, 8, 8, 12, 12]
 
 # load the trained model and label from disk
@@ -254,9 +256,6 @@ elif input_skeleton.split('.')[1] == 'skeleton':
 		# frame = cv2.resize(frame, (224, 224))
 		cv2.imwrite(filename, frame)
 
-writer = None
-(W, H) = (None, None)
-
 images = glob(os.path.join(temp_path, '*'))
 
 count = math.floor(float(len(images) - 5) / 10)
@@ -264,6 +263,8 @@ count = math.floor(float(len(images) - 5) / 10)
 framecount = 0
 temp_image = []
 test_image = []
+
+Q = deque(maxlen=128)
 print(count)
 # loop over frames from the video file stream
 print('[INFO] loop over frames ...')
@@ -277,20 +278,27 @@ for i in range(len(images)):
 
 	if (i - 5) % count == 0 :
 		framecount = framecount + 1
+		if framecount > 10:
+			break
 		frame = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
 		frame = np.expand_dims(frame, axis=2)  
 		temp_image.append(frame)
 
+print('[INFO] Model Predicting ...')
 testX = np.concatenate(temp_image, axis=2)
-testX = np.array(image)
+testX = np.expand_dims(testX, axis=0)
 
-preds = model.predict(testX.astype('float32'))[0]
-label = lb.classes_[preds]
+preds = model.predict(x=testX.astype('float32'))[0]
+Q.append(preds)
+results = np.array(Q).mean(axis=0)
+i = np.argmax(results)
+label = lb.classes_[i]
 activity[label] = activity[label] + 1
 
+print(y_true)
+print(max(activity, key=activity.get))
 
-
-tn, fp, fn, tp = confusion_matrix(y_true, max(activity, key=activity.get)).ravel()
+tn, fp, fn, tp = confusion_matrix(y_true, [str(max(activity, key=activity.get))]).ravel()
 f = open(os.path.join(output_path, 'report%s.txt' %input_skeleton.split('.')[0]), 'w')
 f.write('Actual: %s\n' %y_true)
 f.write('Predict: %s\n' %max(activity, key=activity.get))
@@ -308,5 +316,5 @@ print('ACTIVITY: ' + max(activity, key=activity.get))
 
 # release the file pointers
 print('[INFO] cleaning up...')
-# for f in images:
-#     os.remove(f)
+for f in images:
+    os.remove(f)
