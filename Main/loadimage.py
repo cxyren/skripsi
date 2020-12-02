@@ -51,18 +51,19 @@ for i in tqdm(range(train.shape[0])):
         
     #resize image
     frame = cv2.resize(frame, (224, 224))
-    img2 = np.zeros(shape=[224, 224, 3], dtype=np.uint8)
-    img2[:,:,0] = frame
-    img2[:,:,1] = frame
-    img2[:,:,2] = frame 
-    # # appending the image and the label into the list
-    # temp_image.append(frame)
-    # image_count = image_count + 1
-    # if image_count > 9:
-        # train_image_data.append([np.concatenate(temp_image, axis=2), train['class'][i]])
-        # temp_image.clear()
-        # image_count = 0
-    train_image_data.append([img2, train['class'][i]])
+    frame = np.expand_dims(frame, axis=2)  
+    # img2 = np.zeros(shape=[224, 224, 3], dtype=np.uint8)
+    # img2[:,:,0] = frame
+    # img2[:,:,1] = frame
+    # img2[:,:,2] = frame 
+    # appending the image and the label into the list
+    temp_image.append(frame)
+    image_count = image_count + 1
+    if image_count > 9:
+        train_image_data.append([np.concatenate(temp_image, axis=2), train['class'][i]])
+        temp_image.clear()
+        image_count = 0
+    # train_image_data.append([img2, train['class'][i]])
     del img 
 del train
 
