@@ -1,10 +1,10 @@
 import os
 from keras.models import Model, Sequential
-from keras.layers import Dense, Input, Dropout, Flatten, MaxPooling2D, Conv2D
+from keras.layers import Dense, Input, Dropout, Flatten, MaxPooling2D, Conv2D, AveragePooling2D
 from keras.applications.vgg16 import VGG16
 from keras.preprocessing.image import ImageDataGenerator
 from keras.callbacks import ModelCheckpoint, EarlyStopping, Callback
-from keras.optimizers import Adam
+from keras.optimizers import Adam, SGD
 import keras
 import cv2
 import numpy as np
@@ -40,8 +40,8 @@ if gpu:
 		print(e)
 
 #initialize
-num_train = 51  #25 
-learn_rate = 1e-5
+num_train = 50
+learn_rate = 1e-5 
 num_epochs = 100 #25
 batchsize = 16
 drop_out = 0 #0.4
@@ -97,27 +97,35 @@ del y
 gc.collect()
 del gc.garbage[:] 
 
+# # setting up model
+print("[INFO] setting up model ...")
 newModel = Sequential()
-# # Model 1
-newModel.add(Conv2D(filters=32, kernel_size=3, input_shape=(224,224,10), activation='relu')) #32
-newModel.add(MaxPooling2D(pool_size=(3,3), strides=2))
-newModel.add(Conv2D(filters=32, kernel_size=3, activation='relu'))#64 stride 1
-newModel.add(MaxPooling2D(pool_size=(3,3), strides=2))
-newModel.add(Conv2D(filters=64, kernel_size=3, activation='relu'))
-newModel.add(MaxPooling2D(pool_size=(3,3), strides=2))
-newModel.add(Conv2D(filters=64, kernel_size=3, activation='relu'))
-# newModel.add(Conv2D(filters=64, kernel_size=3, activation='relu'))
-# newModel.add(Dropout(0.2))
+# Model 1
+newModel.add(Conv2D(filters=64, kernel_size=3, activation='relu', input_shape=(224,224,10))) #32
+newModel.add(Conv2D(filters=64, kernel_size=3, activation='relu'))#64 stride 1
+newModel.add(MaxPooling2D(pool_size=(2,2), strides=(2,2)))
+newModel.add(Conv2D(filters=128, kernel_size=3, activation='relu'))
+newModel.add(Conv2D(filters=256, kernel_size=3, activation='relu'))
+newModel.add(MaxPooling2D(pool_size=(2,2), strides=(2,2)))
+newModel.add(Conv2D(filters=256, kernel_size=3, activation='relu'))
+newModel.add(Conv2D(filters=256, kernel_size=3, activation='relu'))
+newModel.add(Conv2D(filters=256, kernel_size=3, activation='relu'))
+newModel.add(MaxPooling2D(pool_size=(2,2), strides=(2,2)))
+newModel.add(Conv2D(filters=512, kernel_size=3, activation='relu'))
+newModel.add(Conv2D(filters=512, kernel_size=3, activation='relu'))
+newModel.add(Conv2D(filters=512, kernel_size=3, activation='relu'))
+newModel.add(MaxPooling2D(pool_size=(2,2), strides=(2,2)))
+newModel.add(AveragePooling2D(pool_size=(2,2)))
 newModel.add(Flatten())
-newModel.add(Dense(128, activation='relu'))
-# newModel.add(Dropout(0.1))
+newModel.add(Dense(512, activation='relu'))
+newModel.add(Dropout(0.2))
 newModel.add(Dense(len(lb.classes_), activation='softmax'))
 
 # Model 2
 # newModel.add(Conv2D(filters=32, kernel_size=7, strides=(3,3), activation='relu', input_shape=(224,224,10)))
 # newModel.add(Conv2D(filters=64, kernel_size=5, activation='relu'))
 # newModel.add(Conv2D(filters=64, kernel_size=3, activation='relu'))
-# newModel.add(Dropout(0.2))
+# newModel.add(Dropout(0.1))
 # newModel.add(Flatten())
 # newModel.add(Dense(128, activation='relu'))
 # newModel.add(Dropout(0.1))
@@ -129,7 +137,8 @@ print("[INFO] adding callbacks ...")
 time_callbacks = TimeHistory()
 model_callbacks =[
     #for earlystoping
-    # EarlyStopping(monitor='val_accuracy', patience=20, verbose=1, mode='auto'),
+    # EarlyStopping(monitor='val_accuracy',  patience=25, verbose=1, mode='auto'),
+    # EarlyStopping(monitor='val_loss', patience=10, verbose=1, mode='min'),
     #for check point
     ModelCheckpoint(filepath=os.path.join(check_path, 'model.{epoch:02d}-{val_loss:.2f}.h5'), monitor='val_loss', verbose=1, save_best_only=True, save_weights_only=False, mode='auto'),
     #for record time

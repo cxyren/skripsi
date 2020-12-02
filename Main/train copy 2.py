@@ -148,7 +148,7 @@ with open(os.path.join(report_path, summary_file),'w') as fh:
 
 # # compile model
 print("[INFO] compiling ...")
-newModel.compile(optimizer=SGD(learning_rate=learn_rate), loss='categorical_crossentropy', metrics=['accuracy'])
+newModel.compile(optimizer=Adam(learning_rate=learn_rate), loss='categorical_crossentropy', metrics=['accuracy'])
 
 # release memory again
 gc.collect()
