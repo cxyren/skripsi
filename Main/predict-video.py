@@ -156,7 +156,7 @@ for i in range(name_class.shape[0]):
 	if input_skeleton.split('.')[0][-2:] == name_class['code'][i][-2:]:
 		y_true.append(name_class['name'][i])
 
-print(input_skeleton)
+print('Skeleton name: %s' % input_skeleton)
 # load skeleton
 print('[INFO] load skeleton ...')
 #read skeleton
@@ -209,52 +209,7 @@ if input_skeleton.split('.')[1] == 'csv':
 				#if theres error then break
 				check = True
 				break
-		left = 9999
-		right = -1
-		bot = 0
 
-		for j in range(frame.shape[1]):
-			for k in range(frame.shape[0]):
-				if all(l > 0 for l in img[k,j]):
-					if k > bot:
-						bot = k
-					if j < left:
-						left = j
-					if j > right:
-						right = j
-
-		right = right + 2
-		left = left - 2
-		bot = bot + 2
-		top = bot - 165
-
-		img = frame[int(top):int(bot), int(left):int(right)]
-		
-		frame = np.zeros(shape=[224, 224], dtype=np.uint8)
-
-		if img.shape[1] < img.shape[0]:
-			img = cv2.resize(img, (int(img.shape[1]*(224/img.shape[0])), 224))
-			
-
-			#relocating image
-			center_x = frame.shape[1] / 2
-			center_x2 = img.shape[1] / 2
-			
-			frame[int(0):int(224), int(center_x - center_x2):int(center_x + center_x2)] = img
-		else:
-			img = cv2.resize(img, (224, int(img.shape[0]*(224/img.shape[1]))))
-
-			#relocating image
-			center_y = frame.shape[0] / 2
-			center_y2 = img.shape[0] / 2
-			
-			frame[int(center_y - center_y2):int(center_y + center_y2), int(0):int(224)] = img
-        
-		#resize image
-		frame = cv2.resize(frame, (224, 224))
-		frame = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
-		frame = frame.astype('float64')
-		frame *= 255.0/frame.max() 
 		#save file
 		filename = os.path.join(temp_path, "frame%i.jpg" % i)
 		# frame = cv2.resize(frame, (224, 224))
@@ -297,52 +252,7 @@ elif input_skeleton.split('.')[1] == 'skeleton':
 			dy = np.int32(round(float(joint['colorY'])))
 			#write joint
 			frame = cv2.circle(frame, (dx, dy), radius=5, color=(bv, gv, rv), thickness=-1)
-		left = 9999
-		right = -1
-		bot = 0
-
-		for j in range(frame.shape[1]):
-			for k in range(frame.shape[0]):
-				if all(l > 0 for l in img[k,j]):
-					if k > bot:
-						bot = k
-					if j < left:
-						left = j
-					if j > right:
-						right = j
-
-		right = right + 2
-		left = left - 2
-		bot = bot + 2
-		top = bot - 165
-
-		img = frame[int(top):int(bot), int(left):int(right)]
-		
-		frame = np.zeros(shape=[224, 224], dtype=np.uint8)
-
-		if img.shape[1] < img.shape[0]:
-			img = cv2.resize(img, (int(img.shape[1]*(224/img.shape[0])), 224))
 			
-
-			#relocating image
-			center_x = frame.shape[1] / 2
-			center_x2 = img.shape[1] / 2
-			
-			frame[int(0):int(224), int(center_x - center_x2):int(center_x + center_x2)] = img
-		else:
-			img = cv2.resize(img, (224, int(img.shape[0]*(224/img.shape[1]))))
-
-			#relocating image
-			center_y = frame.shape[0] / 2
-			center_y2 = img.shape[0] / 2
-			
-			frame[int(center_y - center_y2):int(center_y + center_y2), int(0):int(224)] = img
-        
-		#resize image
-		frame = cv2.resize(frame, (224, 224))
-		frame = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
-		frame = frame.astype('float64')
-		frame *= 255.0/frame.max() 		
 		#save file
 		filename = os.path.join(temp_path, "frame%i.jpg" % i)
 		# frame = cv2.resize(frame, (224, 224))
@@ -357,22 +267,64 @@ temp_image = []
 test_image = []
 
 Q = deque(maxlen=128)
-print(count)
+
 # loop over frames from the video file stream
 print('[INFO] loop over frames ...')
 for i in range(len(images)):
 	# read the next frame from the file
 	frame = cv2.imread(images[i])
 
-	output = frame.copy()
-	frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-	frame = cv2.resize(frame, (224, 224)).astype('float32')
-
 	if (i - 5) % count == 0 :
 		framecount = framecount + 1
 		if framecount > 10:
 			break
-		frame = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
+		
+		left = 9999
+		right = -1
+		bot = 0
+
+		for j in range(frame.shape[1]):
+			for k in range(frame.shape[0]):
+				if all(l > 0 for l in frame[k,j]):
+					if k > bot:
+						bot = k
+					if j < left:
+						left = j
+					if j > right:
+						right = j
+
+		right = right + 2
+		left = left - 2
+		bot = bot + 2
+		top = bot - 165
+
+		img = frame[int(top):int(bot), int(left):int(right)]
+
+		img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+		
+		frame = np.zeros(shape=[224, 224], dtype=np.uint8)
+
+		if img.shape[1] < img.shape[0]:
+			img = cv2.resize(img, (int(img.shape[1]*(224/img.shape[0])), 224))
+			
+			#relocating image
+			center_x = frame.shape[1] / 2
+			center_x2 = img.shape[1] / 2
+			
+			frame[int(0):int(224), int(center_x - center_x2):int(center_x + center_x2)] = img
+		else:
+			img = cv2.resize(img, (224, int(img.shape[0]*(224/img.shape[1]))))
+
+			#relocating image
+			center_y = frame.shape[0] / 2
+			center_y2 = img.shape[0] / 2
+			
+			frame[int(center_y - center_y2):int(center_y + center_y2), int(0):int(224)] = img
+		
+		#resize image
+		frame = cv2.resize(frame, (224, 224)).astype('float64')
+		frame *= 255.0/frame.max() 
+
 		frame = np.expand_dims(frame, axis=2)  
 		temp_image.append(frame)
 
@@ -386,25 +338,30 @@ results = np.array(Q).mean(axis=0)
 i = np.argmax(results)
 label = lb.classes_[i]
 activity[label] = activity[label] + 1
-
-print(y_true)
-print(max(activity, key=activity.get))
-
-tn, fp, fn, tp = confusion_matrix(y_true, [str(max(activity, key=activity.get))]).ravel()
-f = open(os.path.join(output_path, 'report%s.txt' %input_skeleton.split('.')[0]), 'w')
-f.write('Actual: %s\n' %y_true)
-f.write('Predict: %s\n' %max(activity, key=activity.get))
-f.write('TN: %i\n' %tn)
-f.write('FP: %i\n' %fp)
-f.write('FN: %i\n' %fn)
-f.write('TP: %i\n' %tp)
-f.close()
+y_predict = []
+y_predict.append(max(activity, key=activity.get))
 
 #result
-print(activity)
 print('[INFO] RESULT ...')
-print('ACTIVITY: ' + max(activity, key=activity.get))
+print('ACTUAL: %s' % y_true)
+print('ACTIVITY: %s' % y_predict)
 
+result = confusion_matrix(y_true=y_true, y_pred=y_predict, labels=lb.classes_).ravel()
+if len(result) == 4:
+	tn, fp, fn, tp = result
+else:
+	tp = result
+	tn = 0
+	fp = 0
+	fn = 0
+f = open(os.path.join(output_path, 'report%s.txt' %input_skeleton.split('.')[0]), 'w')
+f.write('Actual: %s\n' % y_true)
+f.write('Predict: %s\n' % y_predict)
+f.write('TN: %i\n' % tn)
+f.write('FP: %i\n' % fp)
+f.write('FN: %i\n' % fn)
+f.write('TP: %i\n' % tp)
+f.close()
 
 # release the file pointers
 print('[INFO] cleaning up...')
