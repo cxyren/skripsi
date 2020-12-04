@@ -40,8 +40,8 @@ if gpu:
 		print(e)
 
 #initialize
-num_train = 50
-learn_rate = 1e-5 
+num_train = 53
+learn_rate = 1e-4 
 num_epochs = 100 #25
 batchsize = 16
 drop_out = 0 #0.4
@@ -153,7 +153,7 @@ with open(os.path.join(report_path, summary_file),'w') as fh:
 
 # # compile model
 print("[INFO] compiling ...")
-newModel.compile(optimizer=Adam(learning_rate=learn_rate), loss='categorical_crossentropy', metrics=['accuracy'])
+newModel.compile(optimizer=SGD(learning_rate=learn_rate), loss='categorical_crossentropy', metrics=['accuracy'])
 
 # release memory again
 gc.collect()

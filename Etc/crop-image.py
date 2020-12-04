@@ -5,11 +5,11 @@ import os
 import cv2
 
 #training data
-df = pd.read_csv('D:/user/Documents/Skripsi/Dataset/fix/train_newest8.csv')
+df = pd.read_csv('D:/user/Documents/Skripsi/Dataset/fix/train_newest9.csv')
 name_class = pd.read_csv('D:/user/Documents/Skripsi/Dataset/class_name_new.csv')
 
-dest_path = 'C:/train_tests_crop/'
-arr_path = 'C:/train_tests/'
+dest_path = 'C:/train_test2_crop/'
+arr_path = 'C:/train_test2/'
 
 train_image = []
 train_class = []
@@ -39,7 +39,9 @@ for i in tqdm(range(df.shape[0])):
             right = right + 2
             left = left - 2
             bot = bot + 2
-            top = bot - 165
+            top = bot - 175
+            if top < 0 :
+                top = 0
 
             crop_img = img[int(top):int(bot), int(left):int(right)]
             # save img

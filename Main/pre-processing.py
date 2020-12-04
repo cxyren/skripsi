@@ -103,7 +103,7 @@ def load_missing_file(path):
 #path
 skeleton_path = 'D:/user/Documents/Skripsi/Dataset/ntu-skeleton/skeletons/'
 missing_skeleton_path = 'D:/user/Documents/Skripsi/Dataset/ntu_rgbd_missings.txt'
-dest_path = 'C:/train_tests/'
+dest_path = 'C:/train_test2/'
 
 #class that been used
 name_class = pd.read_csv('D:/user/Documents/Skripsi/Dataset/class_name_new.csv')
@@ -161,17 +161,18 @@ for i in tqdm(range(len(skeleton))):
     #read skeleton file
     bodyinfo = read_skeleton_file(os.path.join(skeleton_path, skeleton_file_name))
 
-    count = math.floor(float(len(bodyinfo) - 5) / 10)
+    count = math.floor((len(bodyinfo) - 5) *1.0 / 10)
 
     framecount = 0
     
     #loop for in frame
     for j in range(len(bodyinfo)): 
         #get 10 frame 
-        if framecount > 9:
-            break
-        if (j - 5) % count == 0 :
+        
+        if (j - 4) % count == 0 :            
             framecount = framecount + 1
+            if framecount > 10:
+                break
             #make blank images
             frame = np.zeros(shape=[1080, 1920, 3], dtype=np.uint8)
             color = tuple(reversed([0,0,0]))
@@ -240,4 +241,4 @@ df['spine_mid_Y'] = spine_mid_y
 
 print('[INFO]SAVING INTO CSV...')
 # converting the dataframe into csv file 
-df.to_csv('D:/user/Documents/Skripsi/Dataset/fix/train_newest8.csv', header=True, index=False)
+df.to_csv('D:/user/Documents/Skripsi/Dataset/fix/train_newest9.csv', header=True, index=False)

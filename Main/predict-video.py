@@ -274,7 +274,7 @@ for i in range(len(images)):
 	# read the next frame from the file
 	frame = cv2.imread(images[i])
 
-	if (i - 5) % count == 0 :
+	if (i - 4) % count == 0 :
 		framecount = framecount + 1
 		if framecount > 10:
 			break
@@ -296,7 +296,7 @@ for i in range(len(images)):
 		right = right + 2
 		left = left - 2
 		bot = bot + 2
-		top = bot - 165
+		top = bot - 180
 
 		img = frame[int(top):int(bot), int(left):int(right)]
 
@@ -330,6 +330,7 @@ for i in range(len(images)):
 
 print('[INFO] Model Predicting ...')
 testX = np.concatenate(temp_image, axis=2)
+cv2.imwrite('C:/users/cxyre/desktop/image.jpg', testX)
 testX = np.expand_dims(testX, axis=0)
 
 preds = model.predict(x=testX.astype('float32'))[0]
@@ -346,7 +347,7 @@ print('[INFO] RESULT ...')
 print('ACTUAL: %s' % y_true)
 print('ACTIVITY: %s' % y_predict)
 
-result = confusion_matrix(y_true=y_true, y_pred=y_predict, labels=lb.classes_).ravel()
+result = confusion_matrix(y_true=y_true, y_pred=y_predict).ravel()
 if len(result) == 4:
 	tn, fp, fn, tp = result
 else:
