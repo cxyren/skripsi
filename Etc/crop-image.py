@@ -6,11 +6,11 @@ import cv2
 import numpy as np
 
 #training data
-df = pd.read_csv('D:/user/Documents/Skripsi/Dataset/fix/test_newest10.csv')
-name_class = pd.read_csv('D:/user/Documents/Skripsi/Dataset/class_name_new_new.csv')
+df = pd.read_csv('D:/user/Documents/Skripsi/Dataset/fix/train_newest10.csv')
+# name_class = pd.read_csv('D:/user/Documents/Skripsi/Dataset/class_name_new_new.csv')
 
-dest_path = 'C:/new_test_crop/'
-arr_path = 'C:/new_test/'
+dest_path = 'C:/new_train_crop/'
+arr_path = 'C:/new_train/'
 
 train_image = []
 train_class = []
@@ -18,35 +18,35 @@ print("[INFO] load image ...")
 for i in tqdm(range(df.shape[0])):
     if not df['class'][i]:
         continue
-    for j in range(name_class.shape[0]):
-        if df['class'][i] == name_class['name'][j]:
-            # loading the image and resize to 224x224 and rgb
-            img = cv2.imread(os.path.join(arr_path, df['image'][i]))
-            
-            left = 9999
-            right = -1
-            bot = 0
+    if os.path.exists(os.path.join(dest_path, df['image'][i])):
+        continue
+    # loading the image and resize to 224x224 and rgb
+    img = cv2.imread(os.path.join(arr_path, df['image'][i]))
+    
+    left = 9999
+    right = -1
+    bot = 0
 
-            for j in range(img.shape[1]):
-                for k in range(img.shape[0]):
-                    if np.any(img[k,j]):
-                        if k > bot:
-                            bot = k
-                        if j < left:
-                            left = j
-                        if j > right:
-                            right = j
+    for j in range(img.shape[1]):
+        for k in range(img.shape[0]):
+            if np.any(img[k,j]):
+                if k > bot:
+                    bot = k
+                if j < left:
+                    left = j
+                if j > right:
+                    right = j
 
-            right = right + 2
-            left = left - 2
-            bot = bot + 2
-            top = bot - 175
-            if top < 0 :
-                top = 0
+    right = right + 2
+    left = left - 2
+    bot = bot + 2
+    top = bot - 175
+    if top < 0 :
+        top = 0
 
-            crop_img = img[int(top):int(bot), int(left):int(right)]
-            # save img
-            cv2.imwrite(os.path.join(dest_path, df['image'][i]), crop_img)
+    crop_img = img[int(top):int(bot), int(left):int(right)]
+    # save img
+    cv2.imwrite(os.path.join(dest_path, df['image'][i]), crop_img)
             
 # del df
 

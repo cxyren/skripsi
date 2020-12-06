@@ -90,7 +90,7 @@ from tqdm import tqdm
 
 try:
     
-    os.system('python pre-processing.py')
+    # os.system('python pre-processing.py')
     os.system('python "../etc/crop-image.py"')
     os.system('python "../etc/crop-image.py"')
     os.system('python loadimage.py')
