@@ -40,8 +40,8 @@ if gpu:
 		print(e)
 
 #initialize
-num_train = 53
-learn_rate = 1e-4 
+num_train = 54
+learn_rate = 1e-5 
 num_epochs = 100 #25
 batchsize = 16
 drop_out = 0 #0.4
@@ -73,8 +73,8 @@ f.close()
 
 print("[INFO] load image ...")
 #load pickle of image and label
-X = pickle.loads(open(os.path.join(data_path, 'x4.pickle'), "rb").read())
-y = pickle.loads(open(os.path.join(data_path, 'y4.pickle'), "rb").read())
+X = pickle.loads(open(os.path.join(data_path, 'new_trainx.pickle'), "rb").read())
+y = pickle.loads(open(os.path.join(data_path, 'new_trainy.pickle'), "rb").read())
 
 # converting the list of image to numpy array
 X = np.array(X)
@@ -89,7 +89,6 @@ y = lb.fit_transform(y)
 # #split data
 print("[INFO] splitting data ...")
 trainX, testX, trainY, testY = train_test_split(X, y, random_state = 42, test_size = 0.2, stratify = y)
-trainX, valX, trainY, valY = train_test_split(trainX, trainY, random_state = 42, test_size = 0.1, stratify = trainY)
 
 # #release memory
 del X
@@ -153,7 +152,7 @@ with open(os.path.join(report_path, summary_file),'w') as fh:
 
 # # compile model
 print("[INFO] compiling ...")
-newModel.compile(optimizer=SGD(learning_rate=learn_rate), loss='categorical_crossentropy', metrics=['accuracy'])
+newModel.compile(optimizer=Adam(learning_rate=learn_rate), loss='categorical_crossentropy', metrics=['accuracy'])
 
 # release memory again
 gc.collect()
@@ -165,7 +164,8 @@ H = newModel.fit(
     x=trainX,
     y=trainY,
     batch_size=batchsize,
-    validation_data=(valX, valY),
+    validation_split=0.1,
+    shuffle=True,
     epochs=num_epochs,
     callbacks=model_callbacks
     )

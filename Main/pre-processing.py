@@ -103,10 +103,11 @@ def load_missing_file(path):
 #path
 skeleton_path = 'D:/user/Documents/Skripsi/Dataset/ntu-skeleton/skeletons/'
 missing_skeleton_path = 'D:/user/Documents/Skripsi/Dataset/ntu_rgbd_missings.txt'
-dest_path = 'C:/train_test2/'
+train_path = 'C:/new_train/'
+test_path = 'C:/new_test'
 
 #class that been used
-name_class = pd.read_csv('D:/user/Documents/Skripsi/Dataset/class_name_new.csv')
+name_class = pd.read_csv('D:/user/Documents/Skripsi/Dataset/class_name_new_new.csv')
 
 #used setup
 setup_num = dict()
@@ -135,8 +136,45 @@ skeleton_class = []
 spine_mid_x = []
 spine_mid_y = []
 
+for i in range(2):
+    skeleton_image.append([])
+    skeleton_name.append([])
+    skeleton_class.append([])
+    spine_mid_x.append([])
+    spine_mid_y.append([])
+
 #get all skeleton
 skeleton = glob(os.path.join(skeleton_path, '*'))
+
+count = 0
+print('[INFO] GET COUNT')
+for i in tqdm(range(len(skeleton))):
+    #check if skeleton not valid
+    check = False   
+
+    #get skeleton name 
+    skeleton_file_name = skeleton[i].split('/')[6][10:]
+
+    #check if skeleton file is missing or not
+    if skeleton_file_name in missing_files:
+        continue
+    
+    #check if skeleton in the setup dict
+    if skeleton_file_name[:4] not in setup_num:
+        continue
+
+    #check if skeleton not in class dict
+    if skeleton_file_name.split('.')[0][-4:] not in class_code:
+        continue
+
+    count = count + 1
+
+print('TOTAL: %i'%count) #4368
+print('TRAIN : %i'%round(count*0.8)) #3494
+print('TEST : %i'%round(count*0.2)) #874
+
+count_train = 0
+count_test = 0
 
 #storing the frames
 for i in tqdm(range(len(skeleton))):
@@ -161,7 +199,7 @@ for i in tqdm(range(len(skeleton))):
     #read skeleton file
     bodyinfo = read_skeleton_file(os.path.join(skeleton_path, skeleton_file_name))
 
-    count = math.floor((len(bodyinfo) - 5) *1.0 / 10)
+    count = round((len(bodyinfo) - 5) *1.0 / 10)
 
     framecount = 0
     
@@ -172,6 +210,7 @@ for i in tqdm(range(len(skeleton))):
         if (j - 4) % count == 0 :            
             framecount = framecount + 1
             if framecount > 10:
+                print(framecount)
                 break
             #make blank images
             frame = np.zeros(shape=[1080, 1920, 3], dtype=np.uint8)
@@ -218,27 +257,83 @@ for i in tqdm(range(len(skeleton))):
             #if theres error then break
             if check:
                 break
-            joint = bodyinfo[j][0]['joints'][1]
-            spine_mid_x.append(joint['colorX'])
-            spine_mid_y.append(joint['colorY'])
-            #save label and name
-            skeleton_name.append(skeleton_file_name.split('.')[0].split('_')[0])
-            skeleton_image.append(skeleton_file_name.split('.')[0].split('_')[0] +"_frame%d.jpg" % j)
-            skeleton_class.append(class_code.get(skeleton_file_name.split('.')[0][-4:]))
-            #save file
-            filename = os.path.join(dest_path,  skeleton_file_name.split('.')[0].split('_')[0] +"_frame%d.jpg" % j)
+            
             frame = cv2.resize(frame, (int(frame.shape[1] * 0.3), int(frame.shape[0] * 0.3)))
-            cv2.imwrite(filename, frame)
+            # left = 9999
+            # right = -1
+            # bot = 0
 
+            # for m in range(frame.shape[1]):
+            #     for n in range(frame.shape[0]):
+            #         if np.any(frame[n,m]):
+            #             if n > bot:
+            #                 bot = n
+            #             if m < left:
+            #                 left = m
+            #             if m > right:
+            #                 right = m
+
+            # right = right + 2
+            # left = left - 2
+            # bot = bot + 2
+            # top = bot - 175
+            # if top < 0 :
+            #     top = 0
+
+            # # print(frame.shape)
+            # # print('top:%i,bot:%i,left:%i,right:%i'%(top,bot,left,right))
+
+            # frame = frame[int(top):int(bot), int(left):int(right)]
+
+            joint = bodyinfo[j][0]['joints'][1]
+            if count_train < 3494:
+                spine_mid_x[0].append(joint['colorX'])
+                spine_mid_y[0].append(joint['colorY'])
+                #save label and name
+                skeleton_name[0].append(skeleton_file_name.split('.')[0].split('_')[0])
+                skeleton_image[0].append(skeleton_file_name.split('.')[0].split('_')[0] +"_frame%d.jpg" % j)
+                skeleton_class[0].append(class_code.get(skeleton_file_name.split('.')[0][-4:]))
+                #save file
+                filename = os.path.join(train_path,  skeleton_file_name.split('.')[0].split('_')[0] +"_frame%d.jpg" % j)
+                
+                cv2.imwrite(filename, frame)
+            else:
+                spine_mid_x[1].append(joint['colorX'])
+                spine_mid_y[1].append(joint['colorY'])
+                #save label and name
+                skeleton_name[1].append(skeleton_file_name.split('.')[0].split('_')[0])
+                skeleton_image[1].append(skeleton_file_name.split('.')[0].split('_')[0] +"_frame%d.jpg" % j)
+                skeleton_class[1].append(class_code.get(skeleton_file_name.split('.')[0][-4:]))
+                #save file
+                filename = os.path.join(test_path,  skeleton_file_name.split('.')[0].split('_')[0] +"_frame%d.jpg" % j)
+                cv2.imwrite(filename, frame)
+    if count_train < 3494:
+        count_train = count_train + 1
+    else:        
+        count_test = count_test + 1
+
+print('TRAIN : %i'%count_train) #3494
+print('TEST : %i'%count_test) #874
+
+print('[INFO]SAVING INTO CSV...')
+# storing the images and their class in a dataframe
+df = pd.DataFrame()
+df['skeleton'] =skeleton_name[0]
+df['image'] = skeleton_image[0]
+df['class'] = skeleton_class[0]
+df['spine_mid_X'] = spine_mid_x[0]
+df['spine_mid_Y'] = spine_mid_y[0]
+
+# converting the dataframe into csv file 
+df.to_csv('D:/user/Documents/Skripsi/Dataset/fix/train_newest10.csv', header=True, index=False)
 
 # storing the images and their class in a dataframe
 df = pd.DataFrame()
-df['skeleton'] =skeleton_name
-df['image'] = skeleton_image
-df['class'] = skeleton_class
-df['spine_mid_X'] = spine_mid_x
-df['spine_mid_Y'] = spine_mid_y
+df['skeleton'] =skeleton_name[1]
+df['image'] = skeleton_image[1]
+df['class'] = skeleton_class[1]
+df['spine_mid_X'] = spine_mid_x[1]
+df['spine_mid_Y'] = spine_mid_y[1]
 
-print('[INFO]SAVING INTO CSV...')
 # converting the dataframe into csv file 
-df.to_csv('D:/user/Documents/Skripsi/Dataset/fix/train_newest9.csv', header=True, index=False)
+df.to_csv('D:/user/Documents/Skripsi/Dataset/fix/test_newest10.csv', header=True, index=False)

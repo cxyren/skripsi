@@ -1,6 +1,6 @@
 from keras.models import Sequential
 from keras.layers import Dense
-from keras.optimizers import Adam
+from keras.optimizers import Adam, SGD
 from sklearn.preprocessing import LabelBinarizer
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, classification_report
@@ -20,6 +20,53 @@ import matplotlib.pyplot as plt
 import tensorflow as tf
 import math
 
+#function
+def read_skeleton_file(filename):
+    file = open(filename)
+    framecount = file.readline()
+
+    bodyinfo = []
+    for i in range(int(framecount)):
+        bodycount = file.readline()
+        bodies = []
+        for j in range(int(bodycount)):
+            arraynum = file.readline().split()
+            body = {
+                "bodyID": arraynum[0],
+                "clipedEdges": arraynum[1],
+                "handLeftConfidence": arraynum[2],
+                "handLeftState": arraynum[3],
+                "handRightConfidence": arraynum[4],
+                "handRightState": arraynum[5],
+                "isResticted": arraynum[6],
+                "leanX": arraynum[7],
+                "leanY": arraynum[8],
+                "trackingState": arraynum[9],
+                "jointCount": file.readline(),
+                "joints": []
+            }
+            for k in range(int(body["jointCount"])):
+                jointinfo = file.readline().split()
+                joint={
+                    "x": jointinfo[0],
+                    "y": jointinfo[1],
+                    "z": jointinfo[2],
+                    "depthX": jointinfo[3],
+                    "depthY": jointinfo[4],
+                    "colorX": jointinfo[5],
+                    "colorY": jointinfo[6],
+                    "orientationW": jointinfo[7],
+                    "orientationX": jointinfo[8],
+                    "orientationY": jointinfo[9],
+                    "orientationZ": jointinfo[10],
+                    "trackingState": jointinfo[11]
+                }
+                body["joints"].append(joint)
+            bodies.append(body)
+        bodyinfo.append(bodies)
+    file.close()
+    return bodyinfo
+
 class TimeHistory(Callback):
     def on_train_begin(self, logs={}):
         self.times = []
@@ -38,10 +85,11 @@ if gpu:
 	except RuntimeError as e:
 		print(e)
 
-num_train = 2
-learn_rate = 1e-5 
+num_train = 3
+learn_rate = 1e-5
 num_epochs = 100 #25
 batchsize = 100
+test_case = 3
 
 #file to save
 weight_final = 'NEURALNETWORK%02i.h5' % num_train
@@ -68,12 +116,20 @@ f.close()
 #list of image
 list_img = pd.read_csv('D:/user/Documents/Skripsi/Dataset/fix/train_newest9.csv')
 
-if not os.path.isfile("C:/users/cxyre/Desktop/blockx.pickle") and not os.path.isfile("C:/users/cxyre/Desktop/blocky.pickle"):
+if not os.path.isfile("C:/users/cxyre/Desktop/blockx%i.pickle" %test_case) and not os.path.isfile("C:/users/cxyre/Desktop/blocky%i.pickle" %test_case):
     name_class = pd.read_csv('D:/user/Documents/Skripsi/Dataset/class_name_new.csv')
 
     class_code = dict()
     for i in range(name_class.shape[0]):
         class_code[name_class['code'][i]] = name_class['name'][i]
+
+    class_code.pop('A002')
+    class_code.pop('A009')
+    class_code.pop('A017')
+    class_code.pop('A037')
+    class_code.pop('A041')
+    class_code.pop('A044')
+    class_code.pop('A047')
 
     count = -1
   
@@ -82,6 +138,17 @@ if not os.path.isfile("C:/users/cxyre/Desktop/blockx.pickle") and not os.path.is
 
     x = []
     y = []
+    
+    frame_count = 0
+    
+    #used setup
+    setup_num = dict()
+    setup_num['S003'] = True
+    setup_num['S004'] = True
+    setup_num['S005'] = True
+    setup_num['S006'] = True
+    setup_num['S008'] = True
+    setup_num['S009'] = True
 
     print('[INFO] MAKING BLOCK ..')
     #making block
@@ -91,6 +158,7 @@ if not os.path.isfile("C:/users/cxyre/Desktop/blockx.pickle") and not os.path.is
         
         if image_count == 0:
             temp_name[list_img['skeleton'][i]] = True
+            frame_count = 0
             block = []
             for j in range(56):
                 block.append([])
@@ -101,6 +169,7 @@ if not os.path.isfile("C:/users/cxyre/Desktop/blockx.pickle") and not os.path.is
             y.append(class_code.get(list_img['image'][i].split('_')[0][-4:]))
 
         if list_img['skeleton'][i] not in temp_name:
+            frame_count = 0
             temp_image.clear()
             image_count = 0
             del x[count]
@@ -108,14 +177,14 @@ if not os.path.isfile("C:/users/cxyre/Desktop/blockx.pickle") and not os.path.is
             count = count - 1
             continue
             
-
+        # print(os.path.join('C:/train_tests_crop/', list_img['image'][i]))
         img = cv2.imread(os.path.join('C:/train_test2_crop/', list_img['image'][i]), cv2.IMREAD_GRAYSCALE)
+        # print(img.shape)
         #making empty frame    
         frame = np.zeros(shape=[224, 224], dtype=np.uint8)
         if img.shape[1] < img.shape[0]:
             img = cv2.resize(img, (int(img.shape[1]*(224/img.shape[0])), 224))
             
-
             #relocating image
             center_x = frame.shape[1] / 2
             center_x2 = img.shape[1] / 2
@@ -136,26 +205,29 @@ if not os.path.isfile("C:/users/cxyre/Desktop/blockx.pickle") and not os.path.is
         frame = frame.astype('float64')
         frame *= 255.0/frame.max()
 
+        frame_count = frame_count + 1
         for j in range(frame.shape[1]):
             for k in range(frame.shape[0]):
-                if frame[k, j] > 0:
+                if x[count][math.ceil(k*1.0/4.0) - 1][math.ceil(j*1.0/4.0) - 1] == frame_count:
+                    continue
+                if frame[k, j] > 250:
                     x[count][math.ceil(k*1.0/4.0) - 1][math.ceil(j*1.0/4.0) - 1] = x[count][math.ceil(k*1.0/4.0) - 1][math.ceil(j*1.0/4.0) - 1] + 1
 
     print(x)
     print(y)
     print("[INFO] saving image data ...")
-    f = open(os.path.join('C:/users/cxyre/Desktop/', 'blockx.pickle'), "wb")
+    f = open(os.path.join('C:/users/cxyre/Desktop/', 'blockx%i.pickle'%test_case), "wb")
     f.write(pickle.dumps(x))
     f.close()
 
-    f = open(os.path.join('C:/users/cxyre/Desktop/', 'blocky.pickle'), "wb")
+    f = open(os.path.join('C:/users/cxyre/Desktop/', 'blocky%i.pickle'%test_case), "wb")
     f.write(pickle.dumps(y))
     f.close()
 
 print("[INFO] load image ...")
 #load pickle of image and label
-x = pickle.loads(open(os.path.join('C:/users/cxyre/Desktop/', 'blockx.pickle'), "rb").read())
-y = pickle.loads(open(os.path.join('C:/users/cxyre/Desktop/', 'blocky.pickle'), "rb").read())
+x = pickle.loads(open(os.path.join('C:/users/cxyre/Desktop/', 'blockx1.pickle'), "rb").read())
+y = pickle.loads(open(os.path.join('C:/users/cxyre/Desktop/', 'blocky1.pickle'), "rb").read())
 
 print('[INFO] CONVERT INTO NUMPY ARRAY ..')
 temp_x = []
@@ -189,6 +261,7 @@ model.add(Dense(256, activation='relu'))
 model.add(Dense(512, activation='relu'))
 model.add(Dense(512, activation='relu'))
 model.add(Dense(len(lb.classes_), activation='softmax'))
+
 
 # compile the keras model
 model.compile(loss='categorical_crossentropy', optimizer=Adam(learning_rate=learn_rate), metrics=['accuracy'])

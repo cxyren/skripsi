@@ -8,10 +8,10 @@ import numpy as np
 from glob import glob
 
 #training data
-train = pd.read_csv('D:/user/Documents/Skripsi/Dataset/fix/train_newest9.csv')
+train = pd.read_csv('D:/user/Documents/Skripsi/Dataset/fix/test_newest10.csv')
 
 #path
-image_path =  'C:/train_test2_crop/' 
+image_path =  'C:/new_test_crop/' 
 X_n_y_path = 'C:/train/'
 
 # creating empty list
@@ -28,14 +28,24 @@ for i in tqdm(range(train.shape[0])):
     if not os.path.exists(os.path.join(image_path, train['image'][i])):
         continue
 
+    # print(image_count)
+    # print(train['skeleton'][i])
+    # print(temp_name)
     if image_count == 0:
         temp_name[train['skeleton'][i]] = True
 
     if train['skeleton'][i] not in temp_name:
+        print(image_count)
+        print(train['skeleton'][i])
+        print(temp_name)
         temp_image.clear()
         image_count = 0
+        temp_name.clear()
         continue
-    # loading the image rgb
+    
+    image_count = image_count + 1
+
+    # loading the image
     img = cv2.imread(os.path.join(image_path, train['image'][i]), cv2.IMREAD_GRAYSCALE)
     
     #making empty frame    
@@ -62,8 +72,9 @@ for i in tqdm(range(train.shape[0])):
     frame = cv2.resize(frame, (224, 224))
     frame = np.expand_dims(frame, axis=2)  
     temp_image.append(frame)
-    image_count = image_count + 1
-    if image_count > 9:
+    if image_count >= 10:
+        print(train['skeleton'][i])
+        print(temp_name)
         train_image_data.append([np.concatenate(temp_image, axis=2), train['class'][i]])
         temp_image.clear()
         image_count = 0
@@ -71,6 +82,9 @@ for i in tqdm(range(train.shape[0])):
     del img 
 del train
 
+
+print(len(train_image_data))
+print(train_image_data[0][0].shape)
 #shuffle the data
 print("[INFO] shuffle data ...")    
 random.shuffle(train_image_data)
@@ -84,10 +98,10 @@ for image, label in train_image_data:
 
 #saving data
 print("[INFO] saving image data ...")
-f = open(os.path.join(X_n_y_path, 'x7.pickle'), "wb")
+f = open(os.path.join(X_n_y_path, 'new_testx.pickle'), "wb")
 f.write(pickle.dumps(X))
 f.close()
 
-f = open(os.path.join(X_n_y_path, 'y7.pickle'), "wb")
+f = open(os.path.join(X_n_y_path, 'new_testy.pickle'), "wb")
 f.write(pickle.dumps(y))
 f.close()

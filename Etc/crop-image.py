@@ -3,13 +3,14 @@ from tqdm import tqdm
 from glob import glob
 import os
 import cv2
+import numpy as np
 
 #training data
-df = pd.read_csv('D:/user/Documents/Skripsi/Dataset/fix/train_newest9.csv')
-name_class = pd.read_csv('D:/user/Documents/Skripsi/Dataset/class_name_new.csv')
+df = pd.read_csv('D:/user/Documents/Skripsi/Dataset/fix/test_newest10.csv')
+name_class = pd.read_csv('D:/user/Documents/Skripsi/Dataset/class_name_new_new.csv')
 
-dest_path = 'C:/train_test2_crop/'
-arr_path = 'C:/train_test2/'
+dest_path = 'C:/new_test_crop/'
+arr_path = 'C:/new_test/'
 
 train_image = []
 train_class = []
@@ -28,7 +29,7 @@ for i in tqdm(range(df.shape[0])):
 
             for j in range(img.shape[1]):
                 for k in range(img.shape[0]):
-                    if all(l > 0 for l in img[k,j]):
+                    if np.any(img[k,j]):
                         if k > bot:
                             bot = k
                         if j < left:
