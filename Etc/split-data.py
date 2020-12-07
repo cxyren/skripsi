@@ -3,7 +3,7 @@ import os
 import pandas as pd
 from tqdm import tqdm
 
-new_file = 'train_newest15.csv'
+new_file = 'test_newest15.csv'
 
 train_file_path = 'D:/user/Documents/Skripsi/Dataset/fix/'
 
@@ -44,20 +44,18 @@ for i in tqdm(range(train.shape[0])):
         continue
     # print(train['skeleton'][i][8:12])
     if train['skeleton'][i][4:8] == 'C001':
-        continue
-    label.append(train['class'][i])
-    image.append(train['image'][i])
-    dir_label.append('C:/new_train_crop/')
+        label.append(train['class'][i])
+        image.append(train['image'][i])
+        dir_label.append('C:/new_train_crop/')
 
 for i in tqdm(range(test.shape[0])):
     if not train['class'][i]:
         continue
     # print(train['skeleton'][i][8:12])
     if train['skeleton'][i][4:8] == 'C001':
-        continue
-    label.append(test['class'][i])
-    image.append(test['image'][i])
-    dir_label.append('C:/new_test_crop/')
+        label.append(test['class'][i])
+        image.append(test['image'][i])
+        dir_label.append('C:/new_test_crop/')
     
 # trainX1, testX1, trainY1, testY1 = train_test_split(train_image, label, random_state = 42, test_size = 0.5, stratify = label)
 
