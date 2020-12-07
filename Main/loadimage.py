@@ -8,7 +8,7 @@ import numpy as np
 from glob import glob
 
 #training data
-train = pd.read_csv('D:/user/Documents/Skripsi/Dataset/fix/test_newest13.csv')
+train = pd.read_csv('D:/user/Documents/Skripsi/Dataset/fix/train_newest15.csv')
 
 #path
 # image_path =  'C:/new_train_crop/' 
@@ -98,10 +98,10 @@ for image, label in train_image_data:
 
 #saving data
 print("[INFO] saving image data ...")
-f = open(os.path.join(X_n_y_path, 'new_testnx2.pickle'), "wb")
+f = open(os.path.join(X_n_y_path, 'new_trainx4.pickle'), "wb")
 f.write(pickle.dumps(X))
 f.close()
 
-f = open(os.path.join(X_n_y_path, 'new_testny2.pickle'), "wb")
+f = open(os.path.join(X_n_y_path, 'new_trainy4.pickle'), "wb")
 f.write(pickle.dumps(y))
 f.close()

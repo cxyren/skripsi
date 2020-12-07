@@ -14,7 +14,7 @@ import os
 import sys
 
 #initialize
-num_model = 58
+num_model = 57
 count = len(glob('D:/user/Documents/Skripsi/Output/*')) + 1
 model_path = 'D:/user/Documents/Skripsi/Model/'
 temp_path = 'D:/user/Documents/Skripsi/Input/Temp/'
@@ -41,8 +41,8 @@ y_true = []
 # load skeleton
 print('[INFO] load skeleton ...')
 #read skeleton
-X = pickle.loads(open(os.path.join('C:/train/', 'new_testnx2.pickle'), "rb").read())
-y = pickle.loads(open(os.path.join('C:/train/', 'new_testny2.pickle'), "rb").read())
+X = pickle.loads(open(os.path.join('C:/train/', 'new_testx3.pickle'), "rb").read())
+y = pickle.loads(open(os.path.join('C:/train/', 'new_testy3.pickle'), "rb").read())
 
 X = np.array(X)
 y = np.array(y)
