@@ -3,70 +3,92 @@ import os
 import pandas as pd
 from tqdm import tqdm
 
-train_file1 = 'train_1.csv'
-train_file2 = 'train_2.csv'
-train_file3 = 'train_3.csv'
-train_file4 = 'train_4.csv'
-train_file5 = 'train_5.csv'
+new_file = 'train_newest15.csv'
 
-train_file_path = 'D:/user/Documents/Skripsi/Dataset/csv/'
+train_file_path = 'D:/user/Documents/Skripsi/Dataset/fix/'
 
-train = pd.read_csv('D:/user/Documents/Skripsi/Dataset/train_new.csv')
+train = pd.read_csv('D:/user/Documents/Skripsi/Dataset/fix/train_newest10.csv')
+test = pd.read_csv('D:/user/Documents/Skripsi/Dataset/fix/test_newest10.csv')
+
+dir_label = []
 
 print(train.shape[0])
 
-train_image = []
+subject_num = dict()
+subject_num['P001'] = True
+subject_num['P002'] = True
+subject_num['P004'] = True
+subject_num['P005'] = True
+subject_num['P008'] = True
+subject_num['P009'] = True
+subject_num['P013'] = True
+subject_num['P014'] = True
+subject_num['P015'] = True
+subject_num['P016'] = True
+subject_num['P017'] = True
+subject_num['P018'] = True
+subject_num['P019'] = True
+subject_num['P025'] = True
+subject_num['P027'] = True
+subject_num['P028'] = True
+subject_num['P031'] = True
+subject_num['P034'] = True
+subject_num['P035'] = True
+subject_num['P038'] = True
+
+image = []
 label = []
 
 for i in tqdm(range(train.shape[0])):
     if not train['class'][i]:
         continue
+    # print(train['skeleton'][i][8:12])
+    if train['skeleton'][i][4:8] == 'C001':
+        continue
+    label.append(train['class'][i])
+    image.append(train['image'][i])
+    dir_label.append('C:/new_train_crop/')
+
+for i in tqdm(range(test.shape[0])):
+    if not train['class'][i]:
+        continue
+    # print(train['skeleton'][i][8:12])
+    if train['skeleton'][i][4:8] == 'C001':
+        continue
+    label.append(test['class'][i])
+    image.append(test['image'][i])
+    dir_label.append('C:/new_test_crop/')
     
-    if train['image'][i].split('_')[0][-4:] == 'A013':
-        continue
-    elif train['image'][i].split('_')[0][-4:] == 'A025':
-        continue
-    elif train['image'][i].split('_')[0][-4:] == 'A027':
-        continue
-    elif train['image'][i].split('_')[0][-4:] == 'A054':
-        continue
-    elif train['image'][i].split('_')[0][-4:] == 'A055':
-        continue
-    elif train['image'][i].split('_')[0][-4:] == 'A056':
-        continue
-    else:
-        label.append(train['class'][i])
-    train_image.append(train['image'][i])
+# trainX1, testX1, trainY1, testY1 = train_test_split(train_image, label, random_state = 42, test_size = 0.5, stratify = label)
 
-trainX1, testX1, trainY1, testY1 = train_test_split(train_image, label, random_state = 42, test_size = 0.5, stratify = label)
+# trainX2, testX2, trainY2, testY2 = train_test_split(trainX1, trainY1, random_state = 42, test_size = 0.5, stratify = trainY1)
 
-trainX2, testX2, trainY2, testY2 = train_test_split(trainX1, trainY1, random_state = 42, test_size = 0.5, stratify = trainY1)
+# trainX3, testX3, trainY3, testY3 = train_test_split(trainX2, trainY2, random_state = 42, test_size = 0.5, stratify = trainY2)
 
-trainX3, testX3, trainY3, testY3 = train_test_split(trainX2, trainY2, random_state = 42, test_size = 0.5, stratify = trainY2)
-
-trainX4, testX4, trainY4, testY4 = train_test_split(trainX3, trainY3, random_state = 42, test_size = 0.5, stratify = trainY3)
+# trainX4, testX4, trainY4, testY4 = train_test_split(trainX3, trainY3, random_state = 42, test_size = 0.5, stratify = trainY3)
 
 train = pd.DataFrame()
-train['image'] = trainX4
-train['class'] = trainY4
-train.to_csv(os.path.join(train_file_path, train_file1), header=True, index=False)
+train['image'] = image
+train['class'] = label
+train['dir'] = dir_label
+train.to_csv(os.path.join(train_file_path, new_file), header=True, index=False)
 
-train = pd.DataFrame()
-train['image'] = testX4
-train['class'] = testY4
-train.to_csv(os.path.join(train_file_path, train_file2), header=True, index=False)
+# train = pd.DataFrame()
+# train['image'] = testX4
+# train['class'] = testY4
+# train.to_csv(os.path.join(train_file_path, train_file2), header=True, index=False)
 
-train = pd.DataFrame()
-train['image'] = testX3
-train['class'] = testY3
-train.to_csv(os.path.join(train_file_path, train_file3), header=True, index=False)
+# train = pd.DataFrame()
+# train['image'] = testX3
+# train['class'] = testY3
+# train.to_csv(os.path.join(train_file_path, train_file3), header=True, index=False)
 
-train = pd.DataFrame()
-train['image'] = testX2
-train['class'] = testY2
-train.to_csv(os.path.join(train_file_path, train_file4), header=True, index=False)
+# train = pd.DataFrame()
+# train['image'] = testX2
+# train['class'] = testY2
+# train.to_csv(os.path.join(train_file_path, train_file4), header=True, index=False)
 
-train = pd.DataFrame()
-train['image'] = testX1
-train['class'] = testY1
-train.to_csv(os.path.join(train_file_path, train_file5), header=True, index=False)
+# train = pd.DataFrame()
+# train['image'] = testX1
+# train['class'] = testY1
+# train.to_csv(os.path.join(train_file_path, train_file5), header=True, index=False)

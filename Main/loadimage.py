@@ -8,10 +8,10 @@ import numpy as np
 from glob import glob
 
 #training data
-train = pd.read_csv('D:/user/Documents/Skripsi/Dataset/fix/test_newest10.csv')
+train = pd.read_csv('D:/user/Documents/Skripsi/Dataset/fix/test_newest13.csv')
 
 #path
-image_path =  'C:/new_test_crop/' 
+# image_path =  'C:/new_train_crop/' 
 X_n_y_path = 'C:/train/'
 
 # creating empty list
@@ -25,28 +25,28 @@ print("[INFO] load image ...")
 for i in tqdm(range(train.shape[0])):
     if not train['class'][i]:
         continue
-    if not os.path.exists(os.path.join(image_path, train['image'][i])):
+    if not os.path.exists(os.path.join(train['dir'][i], train['image'][i])):
         continue
 
     # print(image_count)
     # print(train['skeleton'][i])
     # print(temp_name)
-    if image_count == 0:
-        temp_name[train['skeleton'][i]] = True
+    # if image_count == 0:
+    #     temp_name[train['skeleton'][i]] = True
 
-    if train['skeleton'][i] not in temp_name:
-        print(image_count)
-        print(train['skeleton'][i])
-        print(temp_name)
-        temp_image.clear()
-        image_count = 0
-        temp_name.clear()
-        continue
+    # if train['skeleton'][i] not in temp_name:
+    #     # print(image_count)
+    #     # print(train['skeleton'][i])
+    #     # print(temp_name)
+    #     temp_image.clear()
+    #     image_count = 0
+    #     temp_name.clear()
+    #     continue
     
     image_count = image_count + 1
 
     # loading the image
-    img = cv2.imread(os.path.join(image_path, train['image'][i]), cv2.IMREAD_GRAYSCALE)
+    img = cv2.imread(os.path.join(train['dir'][i], train['image'][i]), cv2.IMREAD_GRAYSCALE)
     
     #making empty frame    
     frame = np.zeros(shape=[224, 224], dtype=np.uint8)
@@ -73,8 +73,8 @@ for i in tqdm(range(train.shape[0])):
     frame = np.expand_dims(frame, axis=2)  
     temp_image.append(frame)
     if image_count >= 10:
-        print(train['skeleton'][i])
-        print(temp_name)
+        # print(train['skeleton'][i])
+        # print(temp_name)
         train_image_data.append([np.concatenate(temp_image, axis=2), train['class'][i]])
         temp_image.clear()
         image_count = 0
@@ -98,10 +98,10 @@ for image, label in train_image_data:
 
 #saving data
 print("[INFO] saving image data ...")
-f = open(os.path.join(X_n_y_path, 'new_testx.pickle'), "wb")
+f = open(os.path.join(X_n_y_path, 'new_testnx2.pickle'), "wb")
 f.write(pickle.dumps(X))
 f.close()
 
-f = open(os.path.join(X_n_y_path, 'new_testy.pickle'), "wb")
+f = open(os.path.join(X_n_y_path, 'new_testny2.pickle'), "wb")
 f.write(pickle.dumps(y))
 f.close()

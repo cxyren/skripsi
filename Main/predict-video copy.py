@@ -1,7 +1,9 @@
 from keras.models import load_model
 from collections import deque
-from sklearn.metrics import confusion_matrix
+from sklearn.metrics import confusion_matrix, classification_report, multilabel_confusion_matrix
 from tqdm import tqdm
+from sklearn.preprocessing import LabelBinarizer
+import matplotlib.pyplot as plt
 from glob import glob
 import pandas as pd
 import numpy as np
@@ -11,128 +13,15 @@ import cv2
 import os
 import sys
 
-def read_skeleton_file(filename):
-    file = open(filename)
-    framecount = file.readline()
-
-    bodyinfo = []
-    for i in range(int(framecount)):
-        bodycount = file.readline()
-        bodies = []
-        for j in range(int(bodycount)):
-            arraynum = file.readline().split()
-            body = {
-                "bodyID": arraynum[0],
-                "clipedEdges": arraynum[1],
-                "handLeftConfidence": arraynum[2],
-                "handLeftState": arraynum[3],
-                "handRightConfidence": arraynum[4],
-                "handRightState": arraynum[5],
-                "isResticted": arraynum[6],
-                "leanX": arraynum[7],
-                "leanY": arraynum[8],
-                "trackingState": arraynum[9],
-                "jointCount": file.readline(),
-                "joints": []
-            }
-            for k in range(int(body["jointCount"])):
-                jointinfo = file.readline().split()
-                joint={
-                    "x": jointinfo[0],
-                    "y": jointinfo[1],
-                    "z": jointinfo[2],
-                    "depthX": jointinfo[3],
-                    "depthY": jointinfo[4],
-                    "colorX": jointinfo[5],
-                    "colorY": jointinfo[6],
-                    "orientationW": jointinfo[7],
-                    "orientationX": jointinfo[8],
-                    "orientationY": jointinfo[9],
-                    "orientationZ": jointinfo[10],
-                    "trackingState": jointinfo[11]
-                }
-                body["joints"].append(joint)
-            bodies.append(body)
-        bodyinfo.append(bodies)
-    file.close()
-    return bodyinfo
-
-def read_csv_file(df):
-	framecount = df['EventIndex'].iloc[-1] + 1
-	bodyinfo = []
-	for i in range(int(framecount)):
-		body = {
-			"bodyID": df['SkeletonId'][i],
-			"handLeftConfidence": df['HandLeftConfidence'][i],
-			"handLeftState": df['HandLeftState'][i],
-			"handRightConfidence": df['HandRightConfidence'][i],
-			"handRightState": df['HandRightState'][i],
-			"time": df['Time'][i],
-			"joints": []
-		}
-		for j in range(25):
-			if j == 0:
-				joint={
-					"x": df['PositionX'][i],
-					"y": df['PositionY'][i],
-					"z": df['PositionZ'][i],
-				}
-			else:
-				joint={
-					"x": df['PositionX.%i'%j][i],
-					"y": df['PositionY.%i'%j][i],
-					"z": df['PositionZ.%i'%j][i],
-				}
-			body["joints"].append(joint)
-		bodyinfo.append(body)
-	return bodyinfo
-
-def bresenham_line(x0, y0, x1, y1):
-    steep = abs(y1 - y0) > abs(x1 - x0)
-    if steep:
-        x0, y0 = y0, x0  
-        x1, y1 = y1, x1
-
-    switched = False
-    if x0 > x1:
-        switched = True
-        x0, x1 = x1, x0
-        y0, y1 = y1, y0
-
-    if y0 < y1: 
-        ystep = 1
-    else:
-        ystep = -1
-
-    deltax = x1 - x0
-    deltay = abs(y1 - y0)
-    error = -deltax / 2
-    y = y0
-
-    line = []    
-    for x in range(x0, x1 + 1):
-        if steep:
-            line.append((y,x))
-        else:
-            line.append((x,y))
-
-        error = error + deltay
-        if error > 0:
-            y = y + ystep
-            error = error - deltax
-    if switched:
-        line.reverse()
-    return line
-
 #initialize
-num_model = 54
+num_model = 56
 count = len(glob('D:/user/Documents/Skripsi/Output/*')) + 1
 model_path = 'D:/user/Documents/Skripsi/Model/'
 temp_path = 'D:/user/Documents/Skripsi/Input/Temp/'
 model_file = 'modelActivity%02i.h5' % num_model
 label_file = 'lb%02i.pickle' % num_model
 input_path = 'D:/user/Documents/Skripsi/Input/CSV/'
-input_skeleton = sys.argv[1]
+# input_skeleton = sys.argv[1]
 output_path = 'D:/user/Documents/Skripsi/Output/'
 output_video = 'Output%02i.avi' % count
 
@@ -146,56 +35,80 @@ print(os.path.join(model_path, model_file))
 model = load_model(os.path.join(model_path, model_file))
 lb = pickle.loads(open(os.path.join(model_path, label_file), "rb").read())
 
-#class that been used
-name_class = pd.read_csv('D:/user/Documents/Skripsi/Dataset/class_name_new.csv')
-
 y_true = []
-activity = dict()
-for i in range(name_class.shape[0]):
-	activity[name_class['name'][i]] = 0
-	if input_skeleton.split('.')[0][-2:] == name_class['code'][i][-2:]:
-		y_true.append(name_class['name'][i])
 
-print('Skeleton name: %s' % input_skeleton)
+# print('Skeleton name: %s' % input_skeleton)
 # load skeleton
 print('[INFO] load skeleton ...')
 #read skeleton
-X = pickle.loads(open(os.path.join(data_path, 'new_testx.pickle'), "rb").read())
-y = pickle.loads(open(os.path.join(data_path, 'new_testy.pickle'), "rb").read())
+X = pickle.loads(open(os.path.join('C:/train/', 'new_testx1.pickle'), "rb").read())
+y = pickle.loads(open(os.path.join('C:/train/', 'new_testy1.pickle'), "rb").read())
+
+X = np.array(X)
+y = np.array(y)
+
+lb2 = LabelBinarizer()
+y = lb2.fit_transform(y)
 
 print('[INFO] Model Predicting ...')
-preds = model.predict(x=testX.astype('float32'))[0]
-Q.append(preds)
-results = np.array(Q).mean(axis=0)
-i = np.argmax(results)
-label = lb.classes_[i]
-activity[label] = activity[label] + 1
-y_predict = []
-y_predict.append(max(activity, key=activity.get))
-
-#result
-print('[INFO] RESULT ...')
-print('ACTUAL: %s' % y_true)
-print('ACTIVITY: %s' % y_predict)
-
-result = confusion_matrix(y_true=y_true, y_pred=y_predict).ravel()
-if len(result) == 4:
-	tn, fp, fn, tp = result
-else:
-	tp = result
-	tn = 0
-	fp = 0
-	fn = 0
-f = open(os.path.join(output_path, 'report%s.txt' %input_skeleton.split('.')[0]), 'w')
-f.write('Actual: %s\n' % y_true)
-f.write('Predict: %s\n' % y_predict)
-f.write('TN: %i\n' % tn)
-f.write('FP: %i\n' % fp)
-f.write('FN: %i\n' % fn)
-f.write('TP: %i\n' % tp)
+preds = model.predict(x=X.astype('float32'))
+report = classification_report(y.argmax(axis=1), preds.argmax(axis=1), target_names=lb.classes_, output_dict=True)
+print("classification report"),
+print(classification_report(y.argmax(axis=1), preds.argmax(axis=1), target_names=lb.classes_))
+df = pd.DataFrame(report).transpose()
+df.to_csv(os.path.join(output_path, "CLASSIFICATIONNTURGBD1.csv"), index = False)
+scores = model.evaluate(X, y, verbose=0)
+print("%s: %.2f%%" % (model.metrics_names[0], scores[0]))
+print("%s: %.2f%%" % (model.metrics_names[1], scores[1]*100))
+f = open(os.path.join(output_path, 'reportONNTURGB+D1.txt'), 'w')
+f.write("%s: %.2f%%\n" % (model.metrics_names[0], scores[0]))
+f.write("%s: %.2f%%\n" % (model.metrics_names[1], scores[1]*100))
 f.close()
 
-# release the file pointers
-print('[INFO] cleaning up...')
-for f in images:
-    os.remove(f)
+def plot_confusion_matrix(cm, classes, normalize=False, title='Confusion matrix', cmap=plt.cm.Blues):
+	import itertools
+	if normalize:
+		cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
+		print("Normalized confusion matrix")
+	else:
+		print('Confusion matrix, without normalization')
+	
+	print(cm)
+	
+	plt.imshow(cm, interpolation='nearest', cmap=cmap)
+	plt.title(title)
+	plt.colorbar()
+	tick_marks = np.arange(len(classes))
+	plt.xticks(tick_marks, classes, rotation=45)
+	plt.yticks(tick_marks, classes)
+	
+	fmt = '.2f' if normalize else 'd'
+	thresh = cm.max() / 2.
+	for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
+	    plt.text(j, i, format(cm[i, j], fmt),
+	             horizontalalignment="center",
+	             color="white" if cm[i, j] > thresh else "black")
+				 
+	plt.ylabel('True label')
+	plt.xlabel('Predicted label')
+	plt.savefig(os.path.join(output_path, "CONFUSIONMATRIX1.png"), bbox_inches='tight')
+
+result = confusion_matrix(y_true=y.argmax(axis=1), y_pred=preds.argmax(axis=1)).ravel()
+result = np.array(result)
+result = np.reshape(result, (-1, 14))
+np.set_printoptions(precision=2)
+
+# Plot non-normalized confusion matrix
+plt.figure()
+plot_confusion_matrix(result, lb.classes_, title='Confusion matrix, without normalization')
+
+multilabel = multilabel_confusion_matrix(y_true=y.argmax(axis=1), y_pred=preds.argmax(axis=1))
+f = open(os.path.join(output_path, 'reportONNTURGB+D1.txt'), 'a')
+f.write('\n')
+for i in range(len(multilabel)):
+	f.write('Label: %s\n' %lb.classes_[i])
+	f.write('TN: %i\n' % multilabel[i][0][0])
+	f.write('FP: %i\n' % multilabel[i][0][1])
+	f.write('FN: %i\n' % multilabel[i][1][0])
+	f.write('TP: %i\n\n' % multilabel[i][1][1])
+f.close()
