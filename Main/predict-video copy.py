@@ -14,7 +14,7 @@ import os
 import sys
 
 #initialize
-num_model = 57
+num_model = 56
 count = len(glob('D:/user/Documents/Skripsi/Output/*')) + 1
 model_path = 'D:/user/Documents/Skripsi/Model/'
 temp_path = 'D:/user/Documents/Skripsi/Input/Temp/'
@@ -41,8 +41,8 @@ y_true = []
 # load skeleton
 print('[INFO] load skeleton ...')
 #read skeleton
-X = pickle.loads(open(os.path.join('C:/train/', 'new_testx3.pickle'), "rb").read())
-y = pickle.loads(open(os.path.join('C:/train/', 'new_testy3.pickle'), "rb").read())
+X = pickle.loads(open(os.path.join('C:/train/', 'new_testx1.pickle'), "rb").read())
+y = pickle.loads(open(os.path.join('C:/train/', 'new_testy1.pickle'), "rb").read())
 
 X = np.array(X)
 y = np.array(y)
@@ -56,11 +56,11 @@ report = classification_report(y.argmax(axis=1), preds.argmax(axis=1), target_na
 print("classification report"),
 print(classification_report(y.argmax(axis=1), preds.argmax(axis=1), target_names=lb.classes_))
 df = pd.DataFrame(report).transpose()
-df.to_csv(os.path.join(output_path, "CLASSIFICATIONNTURGBD1.csv"), index = False)
+df.to_csv(os.path.join(output_path, "CLASSIFICATIONNTURGBD3.csv"), index = False)
 scores = model.evaluate(X, y, verbose=0)
 print("%s: %.2f%%" % (model.metrics_names[0], scores[0]))
 print("%s: %.2f%%" % (model.metrics_names[1], scores[1]*100))
-f = open(os.path.join(output_path, 'reportONNTURGB+D1.txt'), 'w')
+f = open(os.path.join(output_path, 'reportONNTURGB+D3.txt'), 'w')
 f.write("%s: %.2f%%\n" % (model.metrics_names[0], scores[0]))
 f.write("%s: %.2f%%\n" % (model.metrics_names[1], scores[1]*100))
 f.close()
@@ -91,7 +91,7 @@ def plot_confusion_matrix(cm, classes, normalize=False, title='Confusion matrix'
 				 
 	plt.ylabel('True label')
 	plt.xlabel('Predicted label')
-	plt.savefig(os.path.join(output_path, "CONFUSIONMATRIX1.png"), bbox_inches='tight')
+	plt.savefig(os.path.join(output_path, "CONFUSIONMATRIX3.png"), bbox_inches='tight')
 
 result = confusion_matrix(y_true=y.argmax(axis=1), y_pred=preds.argmax(axis=1)).ravel()
 result = np.array(result)
@@ -103,7 +103,7 @@ plt.figure()
 plot_confusion_matrix(result, lb.classes_, title='Confusion matrix, without normalization')
 
 multilabel = multilabel_confusion_matrix(y_true=y.argmax(axis=1), y_pred=preds.argmax(axis=1))
-f = open(os.path.join(output_path, 'reportONNTURGB+D1.txt'), 'a')
+f = open(os.path.join(output_path, 'reportONNTURGB+D3.txt'), 'a')
 f.write('\n')
 for i in range(len(multilabel)):
 	f.write('Label: %s\n' %lb.classes_[i])
