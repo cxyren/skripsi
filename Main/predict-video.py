@@ -133,7 +133,8 @@ save_path = 'D:/user/Documents/Skripsi/Testing/Temp/'
 gray_path = 'D:/user/Documents/Skripsi/Testing/Grayscale/'
 model_file = 'modelActivity%02i.h5' % num_model
 label_file = 'lb%02i.pickle' % num_model
-input_path = 'D:/user/Documents/Skripsi/Input/CSV/'
+input_path = 'D:/user/Documents/Skripsi/Sidang/'
+input_path_ = 'D:/user/Documents/Skripsi/Input/CSV/'
 input_skeleton = sys.argv[1]
 output_path = 'D:/user/Documents/Skripsi/Output/'
 output_video = 'Output%02i.avi' % count
@@ -305,6 +306,9 @@ for i in range(len(images)):
 
 		img = frame[int(top):int(bot), int(left):int(right)]
 
+		filename = os.path.join(gray_path, "test%i.jpg" % i)
+		cv2.imwrite(filename, img)
+
 		img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
 		
 		frame = np.zeros(shape=[224, 224], dtype=np.uint8)
@@ -332,7 +336,7 @@ for i in range(len(images)):
 		
 		filename = os.path.join(gray_path, "frame%i.jpg" % i)
 		cv2.imwrite(filename, frame)
-		
+
 		frame = np.expand_dims(frame, axis=2)  
 		temp_image.append(frame)
 
@@ -363,7 +367,10 @@ else:
 	tn = 0
 	fp = 0
 	fn = 0
-f = open(os.path.join(output_path, 'report%s.txt' %input_skeleton.split('.')[0]), 'w')
+if input_skeleton.split('.')[1] == 'csv':
+	f = open(os.path.join(output_path, 'report%s.txt' %input_skeleton.split('.')[0]), 'w')
+else:
+	f = open(os.path.join(output_path, 'report%s.txt' %input_skeleton.split('.')[0][-8:]), 'w')
 f.write('Actual: %s\n' % y_true)
 f.write('Predict: %s\n' % y_predict)
 f.write('TN: %i\n' % tn)

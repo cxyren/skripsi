@@ -99,105 +99,116 @@ code_list = []
 for key,value in class_code.items() :
     code_list.append(value)
 
+# similiar = []
+# for i in tqdm(range(len(code_list))):
+#     similiar.append([])
+#     for j in tqdm(range(len(label))):
+#         if label[j] == code_list[i]:
+#             for k in range(j, len(block)):
+#                 if label[k] != code_list[i]:
+#                     continue
+#                 if j == k:
+#                     continue
+#                 sim = 0
+#                 loop_ = int(224/size)
+#                 for l in range(loop_):
+#                     for m in range(loop_):
+#                         if block[j][l][m] <= block[k][l][m] + 1 and block[j][l][m] >= block[k][l][m] - 1 and block[j][l][m] > 0:
+#                             sim += 1
+#                 similiar[i].append(sim * 100 / (loop_ * loop_))
+
+# average_inclass = []
+# min_inclass = []
+# max_inclass = []
+# median_inclass = []
+# for i in tqdm(range(len(similiar))):
+#     average_inclass.append(statistics.mean(similiar[i]))
+#     min_inclass.append(min(similiar[i]))
+#     max_inclass.append(max(similiar[i]))
+#     median_inclass.append(statistics.median(similiar[i]))
+
+# for i in range(len(average_inclass)):
+#     print('Average %i: %f%%' %(i, average_inclass[i]))
+#     print('Min %i: %f%%' %(i, min_inclass[i]))
+#     print('Max %i: %f%%' %(i, max_inclass[i]))
+#     print('Median %i: %f%%\n' %(i, median_inclass[i]))
+
+# similiar = []
+# for i in tqdm(range(len(code_list))):
+#     similiar.append([])
+#     for j in tqdm(range(len(block))):
+#         if label[j] == code_list[i]:
+#             for k in range(len(block)):
+#                 if j == k:
+#                     continue
+#                 if label[j] == label[k]:
+#                     continue
+#                 sim = 0
+#                 loop_ = int(224/size)
+#                 for l in range(loop_):
+#                     for m in range(loop_):
+#                         if block[j][l][m] <= block[k][l][m] + 1 and block[j][l][m] >= block[k][l][m] - 1 and block[j][l][m] > 0:
+#                             sim += 1
+#                 similiar[i].append(sim * 100 / (loop_ * loop_))
+
+# average_outclass = []
+# for i in tqdm(range(len(similiar))):
+#     average_outclass.append(statistics.mean(similiar[i]))
+
+# for i in range(len(average_outclass)):
+#     print('Average %i: %f%%\n' %(i, average_outclass[i]))
+
+# average_total = statistics.mean(average_outclass)
+# print('Average between class: %f%%\n' % (average_total))
+
+# f = open(os.path.join('C:/users/cxyre/Desktop/', 'reportHistogram01.txt'), 'w')
+# f.write('SIMILARITY WITH SAME CLASS\n')
+# for i in range(len(average_inclass)):    
+#     f.write('Average %i: %f%%\n' % (i, average_inclass[i]))
+#     f.write('Min %i: %f%%\n' % (i, min_inclass[i]))
+#     f.write('Max %i: %f%%\n' % (i, max_inclass[i]))
+#     f.write('Median %i: %f%%\n\n' % (i, median_inclass[i]))
+# f.write('SIMILARITY WITH DIFFERENT CLASS')
+# f.write('Average total different class: %f%%\n' % (average_total))
+# for i in range(len(average_outclass)):
+#     f.write('Average %i: %f%%\n' %(i, average_outclass[i]))
+# f.close()
+
 similiar = []
 for i in tqdm(range(len(code_list))):
     similiar.append([])
-    for j in tqdm(range(len(label))):
-        if label[j] == code_list[i]:
-            for k in range(j, len(block)):
-                if label[k] != code_list[i]:
-                    continue
-                if j == k:
-                    continue
-                sim = 0
-                loop_ = int(224/size)
-                for l in range(loop_):
-                    for m in range(loop_):
-                        if block[j][l][m] <= block[k][l][m] + 1 and block[j][l][m] >= block[k][l][m] - 1 and block[j][l][m] > 0:
-                            sim += 1
-                similiar[i].append(sim * 100 / (loop_ * loop_))
-
-average_inclass = []
-min_inclass = []
-max_inclass = []
-median_inclass = []
-for i in tqdm(range(len(similiar))):
-    average_inclass.append(statistics.mean(similiar[i]))
-    min_inclass.append(min(similiar[i]))
-    max_inclass.append(max(similiar[i]))
-    median_inclass.append(statistics.median(similiar[i]))
-
-for i in range(len(average_inclass)):
-    print('Average %i: %f%%' %(i, average_inclass[i]))
-    print('Min %i: %f%%' %(i, min_inclass[i]))
-    print('Max %i: %f%%' %(i, max_inclass[i]))
-    print('Median %i: %f%%\n' %(i, median_inclass[i]))
-
-similiar = []
-for i in tqdm(range(len(code_list))):
-    similiar.append([])
-    for j in tqdm(range(len(block))):
-        if label[j] == code_list[i]:
-            for k in range(len(block)):
-                if j == k:
-                    continue
-                if label[j] == label[k]:
-                    continue
-                sim = 0
-                loop_ = int(224/size)
-                for l in range(loop_):
-                    for m in range(loop_):
-                        if block[j][l][m] <= block[k][l][m] + 1 and block[j][l][m] >= block[k][l][m] - 1 and block[j][l][m] > 0:
-                            sim += 1
-                similiar[i].append(sim * 100 / (loop_ * loop_))
-
-average_outclass = []
-for i in tqdm(range(len(similiar))):
-    average_outclass.append(statistics.mean(similiar[i]))
-
-for i in range(len(average_outclass)):
-    print('Average %i: %f%%\n' %(i, average_outclass[i]))
-
-average_total = statistics.mean(average_outclass)
-print('Average between class: %f%%\n' % (average_total))
-
-f = open(os.path.join('C:/users/cxyre/Desktop/', 'reportHistogram01.txt'), 'w')
-f.write('SIMILARITY WITH SAME CLASS\n')
-for i in range(len(average_inclass)):    
-    f.write('Average %i: %f%%\n' % (i, average_inclass[i]))
-    f.write('Min %i: %f%%\n' % (i, min_inclass[i]))
-    f.write('Max %i: %f%%\n' % (i, max_inclass[i]))
-    f.write('Median %i: %f%%\n\n' % (i, median_inclass[i]))
-f.write('SIMILARITY WITH DIFFERENT CLASS')
-f.write('Average total different class: %f%%\n' % (average_total))
-for i in range(len(average_outclass)):
-    f.write('Average %i: %f%%\n' %(i, average_outclass[i]))
-f.close()
-
-similiar = []
-for i in tqdm(range(len(code_list))):
-    similiar.append([])
-    for j in range(i, len(code_list)):
-        similiar.append([])
-        for k in tqdm(range(len(label))):
+    for j in range(len(code_list)):
+        similiar[i].append([])
+        if j < i:
+            similiar[i][j].append(0)
+            continue
+        for k in tqdm(range(len(block))):
             if label[k] == code_list[i]:
                 for l in range(k, len(block)):
-                    if label[l] != code_list[i]:
+                    if label[l] == code_list[i]:
                         continue
                     if k == l:
                         continue
-                    sim = 0
-                    loop_ = int(224/size)
-                    for m in range(loop_):
-                        for n in range(loop_):
-                            if block[k][m][n] <= block[l][m][n] + 1 and block[k][m][n] >= block[l][m][n] - 1 and block[k][m][n] > 0:
-                                sim += 1
-                    similiar[i][j].append(sim * 100 / (loop_ * loop_))
+                    if label[l] == code_list[j]:
+                        sim = 0
+                        loop_ = int(224/size)
+                        for m in range(loop_):
+                            for n in range(loop_):
+                                if block[k][m][n] <= block[l][m][n] + 1 and block[k][m][n] >= block[l][m][n] - 1 and block[k][m][n] > 0:
+                                    sim += 1
+                        similiar[i][j].append(sim * 100 / (loop_ * loop_))
+                        # print(similiar[i][j])
+
+for i in similiar:
+    for j in i:
+        print(j)
 
 f = open(os.path.join('C:/users/cxyre/Desktop/', 'reportHistogram01.txt'), 'a')
-f.write('SIMILARITY PER CLASS')
-for i in range(len(code_list)):
-    for j in range(i, len(code_list)):
+f.write('\nSIMILARITY PER CLASS\n')
+for i in range(len(similiar)):
+    for j in range(len(similiar[i])):
+        if j < i:
+            continue
         f.write('Average %i %i: %f%%\n' %(i, j, statistics.mean(similiar[i][j])))
     f.write('\n')
 f.close()

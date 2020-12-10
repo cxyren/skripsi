@@ -3,38 +3,44 @@ import os
 import pandas as pd
 from tqdm import tqdm
 
-new_file = 'test_newest15.csv'
+train_new_file = 'train_newest20.csv'
+test_new_file = 'test_newest20.csv'
 
 train_file_path = 'D:/user/Documents/Skripsi/Dataset/fix/'
 
 train = pd.read_csv('D:/user/Documents/Skripsi/Dataset/fix/train_newest10.csv')
 test = pd.read_csv('D:/user/Documents/Skripsi/Dataset/fix/test_newest10.csv')
 
+name_class = pd.read_csv('D:/user/Documents/Skripsi/Dataset/class_name_new_new_new.csv')
+class_code = dict()
+for i in range(name_class.shape[0]):
+    class_code[name_class['code'][i]] = name_class['name'][i]
+
 dir_label = []
 
 print(train.shape[0])
 
-subject_num = dict()
-subject_num['P001'] = True
-subject_num['P002'] = True
-subject_num['P004'] = True
-subject_num['P005'] = True
-subject_num['P008'] = True
-subject_num['P009'] = True
-subject_num['P013'] = True
-subject_num['P014'] = True
-subject_num['P015'] = True
-subject_num['P016'] = True
-subject_num['P017'] = True
-subject_num['P018'] = True
-subject_num['P019'] = True
-subject_num['P025'] = True
-subject_num['P027'] = True
-subject_num['P028'] = True
-subject_num['P031'] = True
-subject_num['P034'] = True
-subject_num['P035'] = True
-subject_num['P038'] = True
+# subject_num = dict()
+# subject_num['P001'] = True
+# subject_num['P002'] = True
+# subject_num['P004'] = True
+# subject_num['P005'] = True
+# subject_num['P008'] = True
+# subject_num['P009'] = True
+# subject_num['P013'] = True
+# subject_num['P014'] = True
+# subject_num['P015'] = True
+# subject_num['P016'] = True
+# subject_num['P017'] = True
+# subject_num['P018'] = True
+# subject_num['P019'] = True
+# subject_num['P025'] = True
+# subject_num['P027'] = True
+# subject_num['P028'] = True
+# subject_num['P031'] = True
+# subject_num['P034'] = True
+# subject_num['P035'] = True
+# subject_num['P038'] = True
 
 image = []
 label = []
@@ -43,16 +49,34 @@ for i in tqdm(range(train.shape[0])):
     if not train['class'][i]:
         continue
     # print(train['skeleton'][i][8:12])
-    if train['skeleton'][i][4:8] == 'C001':
+    # if train['skeleton'][i][4:8] == 'C001':
+    #     label.append(train['class'][i])
+    #     image.append(train['image'][i])
+    #     dir_label.append('C:/new_train_crop/')
+    if train['skeleton'][i][-4:] in class_code:
         label.append(train['class'][i])
         image.append(train['image'][i])
         dir_label.append('C:/new_train_crop/')
 
+train = pd.DataFrame()
+train['image'] = image
+train['class'] = label
+train['dir'] = dir_label
+train.to_csv(os.path.join(train_file_path, train_new_file), header=True, index=False)
+
+dir_label = []
+image = []
+label = []
+
 for i in tqdm(range(test.shape[0])):
-    if not train['class'][i]:
+    if not test['class'][i]:
         continue
     # print(train['skeleton'][i][8:12])
-    if train['skeleton'][i][4:8] == 'C001':
+    # if train['skeleton'][i][4:8] == 'C001':
+    #     label.append(test['class'][i])
+    #     image.append(test['image'][i])
+    #     dir_label.append('C:/new_test_crop/')
+    if test['image'][i].split('_')[0][-4:] in class_code:
         label.append(test['class'][i])
         image.append(test['image'][i])
         dir_label.append('C:/new_test_crop/')
@@ -69,7 +93,7 @@ train = pd.DataFrame()
 train['image'] = image
 train['class'] = label
 train['dir'] = dir_label
-train.to_csv(os.path.join(train_file_path, new_file), header=True, index=False)
+train.to_csv(os.path.join(train_file_path, test_new_file), header=True, index=False)
 
 # train = pd.DataFrame()
 # train['image'] = testX4
