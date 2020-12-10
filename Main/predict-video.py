@@ -129,6 +129,8 @@ num_model = 50
 count = len(glob('D:/user/Documents/Skripsi/Output/*')) + 1
 model_path = 'D:/user/Documents/Skripsi/Model/'
 temp_path = 'D:/user/Documents/Skripsi/Input/Temp/'
+save_path = 'D:/user/Documents/Skripsi/Testing/Temp/'
+gray_path = 'D:/user/Documents/Skripsi/Testing/Grayscale/'
 model_file = 'modelActivity%02i.h5' % num_model
 label_file = 'lb%02i.pickle' % num_model
 input_path = 'D:/user/Documents/Skripsi/Input/CSV/'
@@ -214,6 +216,8 @@ if input_skeleton.split('.')[1] == 'csv':
 		filename = os.path.join(temp_path, "frame%i.jpg" % i)
 		# frame = cv2.resize(frame, (224, 224))
 		cv2.imwrite(filename, frame)
+		filename = os.path.join(save_path, "frame%i.jpg" % i)
+		cv2.imwrite(filename, frame)
 elif input_skeleton.split('.')[1] == 'skeleton':
 	bodyinfo = read_skeleton_file(os.path.join(input_path, input_skeleton))
 	for i in range(len(bodyinfo)):
@@ -257,7 +261,8 @@ elif input_skeleton.split('.')[1] == 'skeleton':
 		filename = os.path.join(temp_path, "frame%i.jpg" % i)
 		# frame = cv2.resize(frame, (224, 224))
 		cv2.imwrite(filename, frame)
-
+		filename = os.path.join(save_path, "frame%i.jpg" % i)
+		cv2.imwrite(filename, frame)
 images = glob(os.path.join(temp_path, '*'))
 
 count = math.floor(float(len(images) - 5) / 10)
@@ -324,13 +329,16 @@ for i in range(len(images)):
 		#resize image
 		frame = cv2.resize(frame, (224, 224)).astype('float64')
 		frame *= 255.0/frame.max() 
-
+		
+		filename = os.path.join(gray_path, "frame%i.jpg" % i)
+		cv2.imwrite(filename, frame)
+		
 		frame = np.expand_dims(frame, axis=2)  
 		temp_image.append(frame)
 
 print('[INFO] Model Predicting ...')
 testX = np.concatenate(temp_image, axis=2)
-cv2.imwrite('C:/users/cxyre/desktop/image.jpg', testX)
+# cv2.imwrite('C:/users/cxyre/desktop/image.jpg', testX)
 testX = np.expand_dims(testX, axis=0)
 
 preds = model.predict(x=testX.astype('float32'))[0]
