@@ -125,7 +125,7 @@ def bresenham_line(x0, y0, x1, y1):
     return line
 
 #initialize
-num_model = 50
+num_model = 59 #55* #50
 count = len(glob('D:/user/Documents/Skripsi/Output/*')) + 1
 model_path = 'D:/user/Documents/Skripsi/Model/'
 temp_path = 'D:/user/Documents/Skripsi/Input/Temp/'
@@ -136,7 +136,7 @@ label_file = 'lb%02i.pickle' % num_model
 input_path = 'D:/user/Documents/Skripsi/Sidang/'
 input_path_ = 'D:/user/Documents/Skripsi/Input/CSV/'
 input_skeleton = sys.argv[1]
-output_path = 'D:/user/Documents/Skripsi/Output/'
+output_path = 'D:/user/Documents/Skripsi/Output/5 kelas/'
 output_video = 'Output%02i.avi' % count
 
 size = 128
@@ -304,7 +304,7 @@ for i in range(len(images)):
 		right = right + 2
 		left = left - 2
 		bot = bot + 2
-		top = bot - 180
+		top = bot - 224
 
 		if top < 0 :
 			top = 0
@@ -370,7 +370,7 @@ else:
 	fp = 0
 	fn = 0
 if input_skeleton.split('.')[1] == 'csv':
-	f = open(os.path.join(output_path, 'report%s.txt' %input_skeleton.split('.')[0]), 'w')
+	f = open(os.path.join(output_path, 'report%s.txt' % input_skeleton.split('.')[0][-6:]), 'w')
 else:
 	f = open(os.path.join(output_path, 'report%s.txt' %input_skeleton.split('.')[0][-8:]), 'w')
 f.write('Actual: %s\n' % y_true)
