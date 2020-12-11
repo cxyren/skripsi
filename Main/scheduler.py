@@ -97,7 +97,7 @@ try:
     # os.system('python loadimage.py')
     # os.system('python histogram.py')
     # print('COPY')
-    os.system('python "train copy.py"')
+    os.system('python "train copy 3.py"')
     # print('COPY 2')
     # os.system('python "train copy 2.py"')
     # print('VGG16')

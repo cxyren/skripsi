@@ -178,9 +178,9 @@ similiar = []
 for i in tqdm(range(len(code_list))):
     similiar.append([])
     for j in range(len(code_list)):
-        similiar[i].append([])
-        if j < i:
-            similiar[i][j].append(0)
+        similiar[i].append([]) 
+        similiar[i][j].append(0)
+        if j < i:   
             continue
         for k in tqdm(range(len(block))):
             if label[k] == code_list[i]:
@@ -196,7 +196,7 @@ for i in tqdm(range(len(code_list))):
                             for n in range(loop_):
                                 if block[k][m][n] <= block[l][m][n] + 1 and block[k][m][n] >= block[l][m][n] - 1 and block[k][m][n] > 0:
                                     sim += 1
-                        similiar[i][j].append(sim * 100 / (loop_ * loop_))
+                        similiar[i][j] = sim * 100 / (loop_ * loop_)
                         # print(similiar[i][j])
 
 for i in similiar:
@@ -207,8 +207,8 @@ f = open(os.path.join('C:/users/cxyre/Desktop/', 'reportHistogram01.txt'), 'a')
 f.write('\nSIMILARITY PER CLASS\n')
 for i in range(len(similiar)):
     for j in range(len(similiar[i])):
-        if j < i:
-            continue
+        # if j < i:
+        #     continue
         f.write('Average %i %i: %f%%\n' %(i, j, statistics.mean(similiar[i][j])))
     f.write('\n')
 f.close()

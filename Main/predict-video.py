@@ -280,6 +280,8 @@ for i in range(len(images)):
 	# read the next frame from the file
 	frame = cv2.imread(images[i])
 
+	frame = cv2.resize(frame, (int(frame.shape[1] * 0.3), int(frame.shape[0] * 0.3)))
+
 	if (i - 4) % count == 0 :
 		framecount = framecount + 1
 		if framecount > 10:
@@ -304,10 +306,10 @@ for i in range(len(images)):
 		bot = bot + 2
 		top = bot - 180
 
-		img = frame[int(top):int(bot), int(left):int(right)]
+		if top < 0 :
+			top = 0
 
-		filename = os.path.join(gray_path, "test%i.jpg" % i)
-		cv2.imwrite(filename, img)
+		img = frame[int(top):int(bot), int(left):int(right)]
 
 		img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
 		

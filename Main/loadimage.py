@@ -53,7 +53,6 @@ for i in tqdm(range(train.shape[0])):
     if img.shape[1] < img.shape[0]:
         img = cv2.resize(img, (int(img.shape[1]*(224/img.shape[0])), 224))
         
-
         #relocating image
         center_x = frame.shape[1] / 2
         center_x2 = img.shape[1] / 2
