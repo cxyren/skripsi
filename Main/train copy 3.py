@@ -43,7 +43,7 @@ if gpu:
 num_train = 60
 learn_rate = 1e-5 
 num_epochs = 100 #25
-batchsize = 32
+batchsize = 24
 drop_out = 0 #0.4
 
 #file to save
@@ -73,8 +73,8 @@ f.close()
 
 print("[INFO] load image ...")
 #load pickle of image and label
-X = pickle.loads(open(os.path.join(data_path, 'new_trainx5.pickle'), "rb").read())
-y = pickle.loads(open(os.path.join(data_path, 'new_trainy5.pickle'), "rb").read())
+X = pickle.loads(open(os.path.join(data_path, 'new_trainx10.pickle'), "rb").read())
+y = pickle.loads(open(os.path.join(data_path, 'new_trainy10.pickle'), "rb").read())
 
 # converting the list of image to numpy array
 X = np.array(X)

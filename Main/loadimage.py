@@ -8,7 +8,7 @@ import numpy as np
 from glob import glob
 
 #training data
-train = pd.read_csv('D:/user/Documents/Skripsi/Dataset/fix/test_newest20.csv')
+train = pd.read_csv('D:/user/Documents/Skripsi/Dataset/fix/test_newest10.csv')
 
 #path
 # image_path =  'C:/new_train_crop/' 
@@ -25,7 +25,7 @@ print("[INFO] load image ...")
 for i in tqdm(range(train.shape[0])):
     if not train['class'][i]:
         continue
-    if not os.path.exists(os.path.join(train['dir'][i], train['image'][i])):
+    if not os.path.exists(os.path.join('C:/new_test_crop/', train['image'][i])):
         continue
 
     # print(image_count)
@@ -46,7 +46,7 @@ for i in tqdm(range(train.shape[0])):
     image_count = image_count + 1
 
     # loading the image
-    img = cv2.imread(os.path.join(train['dir'][i], train['image'][i]), cv2.IMREAD_GRAYSCALE)
+    img = cv2.imread(os.path.join('C:/new_test_crop/', train['image'][i]), cv2.IMREAD_GRAYSCALE)
     
     #making empty frame    
     frame = np.zeros(shape=[224, 224], dtype=np.uint8)
@@ -97,10 +97,10 @@ for image, label in train_image_data:
 
 #saving data
 print("[INFO] saving image data ...")
-f = open(os.path.join(X_n_y_path, 'new_testx5.pickle'), "wb")
+f = open(os.path.join(X_n_y_path, 'new_testx10.pickle'), "wb")
 f.write(pickle.dumps(X))
 f.close()
 
-f = open(os.path.join(X_n_y_path, 'new_testy5.pickle'), "wb")
+f = open(os.path.join(X_n_y_path, 'new_testy10.pickle'), "wb")
 f.write(pickle.dumps(y))
 f.close()
