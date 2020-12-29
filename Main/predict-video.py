@@ -388,25 +388,25 @@ print('[INFO] RESULT ...')
 print('ACTUAL: %s' % y_true)
 print('ACTIVITY: %s' % y_predict)
 
-# result = confusion_matrix(y_true=y_true, y_pred=y_predict).ravel()
-# if len(result) == 4:
-# 	tn, fp, fn, tp = result
-# else:
-# 	tp = result
-# 	tn = 0
-# 	fp = 0
-# 	fn = 0
-# if input_skeleton.split('.')[1] == 'csv':
-# 	f = open(os.path.join(output_path, 'report%s.txt' % input_skeleton.split('.')[0][-6:]), 'w')
-# else:
-# 	f = open(os.path.join(output_path, 'report%s.txt' %input_skeleton.split('.')[0][-8:]), 'w')
-# f.write('Actual: %s\n' % y_true)
-# f.write('Predict: %s\n' % y_predict)
-# f.write('TN: %i\n' % tn)
-# f.write('FP: %i\n' % fp)
-# f.write('FN: %i\n' % fn)
-# f.write('TP: %i\n' % tp)
-# f.close()
+result = confusion_matrix(y_true=y_true, y_pred=y_predict).ravel()
+if len(result) == 4:
+	tn, fp, fn, tp = result
+else:
+	tp = result
+	tn = 0
+	fp = 0
+	fn = 0
+if input_skeleton.split('.')[1] == 'csv':
+	f = open(os.path.join(output_path, 'report%s.txt' % input_skeleton.split('.')[0][-6:]), 'w')
+else:
+	f = open(os.path.join(output_path, 'report%s.txt' %input_skeleton.split('.')[0][-8:]), 'w')
+f.write('Actual: %s\n' % y_true)
+f.write('Predict: %s\n' % y_predict)
+f.write('TN: %i\n' % tn)
+f.write('FP: %i\n' % fp)
+f.write('FN: %i\n' % fn)
+f.write('TP: %i\n' % tp)
+f.close()
 
 # release the file pointers
 print('[INFO] cleaning up...')
