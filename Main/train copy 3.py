@@ -40,10 +40,10 @@ if gpu:
 		print(e)
 
 #initialize
-num_train = 59
+num_train = 60
 learn_rate = 1e-5 
 num_epochs = 100 #25
-batchsize = 24
+batchsize = 32
 drop_out = 0 #0.4
 
 #file to save
@@ -104,11 +104,15 @@ newModel.add(Conv2D(filters=64, kernel_size=3, activation='relu', input_shape=(2
 newModel.add(Conv2D(filters=64, kernel_size=3, activation='relu'))#64 stride 1
 newModel.add(MaxPooling2D(pool_size=(2,2), strides=(2,2)))
 newModel.add(Conv2D(filters=128, kernel_size=3, activation='relu'))
-newModel.add(Conv2D(filters=256, kernel_size=3, activation='relu'))
+newModel.add(Conv2D(filters=128, kernel_size=3, activation='relu'))
 newModel.add(MaxPooling2D(pool_size=(2,2), strides=(2,2)))
 newModel.add(Conv2D(filters=256, kernel_size=3, activation='relu'))
 newModel.add(Conv2D(filters=256, kernel_size=3, activation='relu'))
 newModel.add(Conv2D(filters=256, kernel_size=3, activation='relu'))
+newModel.add(MaxPooling2D(pool_size=(2,2), strides=(2,2)))
+newModel.add(Conv2D(filters=512, kernel_size=3, activation='relu'))
+newModel.add(Conv2D(filters=512, kernel_size=3, activation='relu'))
+newModel.add(Conv2D(filters=512, kernel_size=3, activation='relu'))
 newModel.add(MaxPooling2D(pool_size=(2,2), strides=(2,2)))
 newModel.add(Conv2D(filters=512, kernel_size=3, activation='relu'))
 newModel.add(Conv2D(filters=512, kernel_size=3, activation='relu'))

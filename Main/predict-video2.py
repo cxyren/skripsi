@@ -383,5 +383,5 @@ f.close()
 
 # release the file pointers
 print('[INFO] cleaning up...')
-for f in images:
-    os.remove(f)
+# for f in images:
+#     os.remove(f)

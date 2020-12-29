@@ -1,3 +1,5 @@
+#HOW TO USE
+#python predict-video.py "skeleton/S003A001.skeleton"
 from keras.models import load_model
 from collections import deque
 from sklearn.metrics import confusion_matrix
@@ -129,8 +131,11 @@ num_model = 59 #55* #50
 count = len(glob('D:/user/Documents/Skripsi/Output/*')) + 1
 model_path = 'D:/user/Documents/Skripsi/Model/'
 temp_path = 'D:/user/Documents/Skripsi/Input/Temp/'
-save_path = 'D:/user/Documents/Skripsi/Testing/Temp/'
+full_path = 'D:/user/Documents/Skripsi/Testing/Full/'
+crop_path = 'D:/user/Documents/Skripsi/Testing/Crop/'
 gray_path = 'D:/user/Documents/Skripsi/Testing/Grayscale/'
+remap_path = 'D:/user/Documents/Skripsi/Testing/Remapping/'
+resize_path = 'D:/user/Documents/Skripsi/Testing/Resize/'
 model_file = 'modelActivity%02i.h5' % num_model
 label_file = 'lb%02i.pickle' % num_model
 input_path = 'D:/user/Documents/Skripsi/Sidang/'
@@ -138,6 +143,19 @@ input_path_ = 'D:/user/Documents/Skripsi/Input/CSV/'
 input_skeleton = sys.argv[1]
 output_path = 'D:/user/Documents/Skripsi/Output/5 kelas/'
 output_video = 'Output%02i.avi' % count
+
+for f in glob(os.path.join(temp_path, '*.jpg')):
+    os.remove(f)
+for f in glob(os.path.join(full_path, '*.jpg')):
+    os.remove(f)
+for f in glob(os.path.join(crop_path, '*.jpg')):
+    os.remove(f)
+for f in glob(os.path.join(gray_path, '*.jpg')):
+    os.remove(f)
+for f in glob(os.path.join(remap_path, '*.jpg')):
+    os.remove(f)
+for f in glob(os.path.join(resize_path, '*.jpg')):
+    os.remove(f)
 
 size = 128
 
@@ -217,8 +235,6 @@ if input_skeleton.split('.')[1] == 'csv':
 		filename = os.path.join(temp_path, "frame%i.jpg" % i)
 		# frame = cv2.resize(frame, (224, 224))
 		cv2.imwrite(filename, frame)
-		filename = os.path.join(save_path, "frame%i.jpg" % i)
-		cv2.imwrite(filename, frame)
 elif input_skeleton.split('.')[1] == 'skeleton':
 	bodyinfo = read_skeleton_file(os.path.join(input_path, input_skeleton))
 	for i in range(len(bodyinfo)):
@@ -262,9 +278,7 @@ elif input_skeleton.split('.')[1] == 'skeleton':
 		filename = os.path.join(temp_path, "frame%i.jpg" % i)
 		# frame = cv2.resize(frame, (224, 224))
 		cv2.imwrite(filename, frame)
-		filename = os.path.join(save_path, "frame%i.jpg" % i)
-		cv2.imwrite(filename, frame)
-images = glob(os.path.join(temp_path, '*'))
+images = sorted(glob(os.path.join(temp_path, '*.jpg')), key=os.path.getmtime)
 
 count = math.floor(float(len(images) - 5) / 10)
 
@@ -278,6 +292,7 @@ Q = deque(maxlen=128)
 print('[INFO] loop over frames ...')
 for i in range(len(images)):
 	# read the next frame from the file
+	# print(images[i])
 	frame = cv2.imread(images[i])
 
 	frame = cv2.resize(frame, (int(frame.shape[1] * 0.3), int(frame.shape[0] * 0.3)))
@@ -287,6 +302,9 @@ for i in range(len(images)):
 		if framecount > 10:
 			break
 		
+		filename = os.path.join(full_path, "frame%i.jpg" % i)
+		cv2.imwrite(filename, frame)
+
 		left = 9999
 		right = -1
 		bot = 0
@@ -311,8 +329,14 @@ for i in range(len(images)):
 
 		img = frame[int(top):int(bot), int(left):int(right)]
 
+		filename = os.path.join(crop_path, "frame%i.jpg" % i)
+		cv2.imwrite(filename, img)		
+
 		img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
 		
+		filename = os.path.join(gray_path, "frame%i.jpg" % i)
+		cv2.imwrite(filename, img)
+
 		frame = np.zeros(shape=[224, 224], dtype=np.uint8)
 
 		if img.shape[1] < img.shape[0]:
@@ -332,11 +356,14 @@ for i in range(len(images)):
 			
 			frame[int(center_y - center_y2):int(center_y + center_y2), int(0):int(224)] = img
 		
+		filename = os.path.join(remap_path, "frame%i.jpg" % i)
+		cv2.imwrite(filename, frame)
+
 		#resize image
 		frame = cv2.resize(frame, (224, 224)).astype('float64')
 		frame *= 255.0/frame.max() 
 		
-		filename = os.path.join(gray_path, "frame%i.jpg" % i)
+		filename = os.path.join(resize_path, "frame%i.jpg" % i)
 		cv2.imwrite(filename, frame)
 
 		frame = np.expand_dims(frame, axis=2)  
@@ -361,27 +388,27 @@ print('[INFO] RESULT ...')
 print('ACTUAL: %s' % y_true)
 print('ACTIVITY: %s' % y_predict)
 
-result = confusion_matrix(y_true=y_true, y_pred=y_predict).ravel()
-if len(result) == 4:
-	tn, fp, fn, tp = result
-else:
-	tp = result
-	tn = 0
-	fp = 0
-	fn = 0
-if input_skeleton.split('.')[1] == 'csv':
-	f = open(os.path.join(output_path, 'report%s.txt' % input_skeleton.split('.')[0][-6:]), 'w')
-else:
-	f = open(os.path.join(output_path, 'report%s.txt' %input_skeleton.split('.')[0][-8:]), 'w')
-f.write('Actual: %s\n' % y_true)
-f.write('Predict: %s\n' % y_predict)
-f.write('TN: %i\n' % tn)
-f.write('FP: %i\n' % fp)
-f.write('FN: %i\n' % fn)
-f.write('TP: %i\n' % tp)
-f.close()
+# result = confusion_matrix(y_true=y_true, y_pred=y_predict).ravel()
+# if len(result) == 4:
+# 	tn, fp, fn, tp = result
+# else:
+# 	tp = result
+# 	tn = 0
+# 	fp = 0
+# 	fn = 0
+# if input_skeleton.split('.')[1] == 'csv':
+# 	f = open(os.path.join(output_path, 'report%s.txt' % input_skeleton.split('.')[0][-6:]), 'w')
+# else:
+# 	f = open(os.path.join(output_path, 'report%s.txt' %input_skeleton.split('.')[0][-8:]), 'w')
+# f.write('Actual: %s\n' % y_true)
+# f.write('Predict: %s\n' % y_predict)
+# f.write('TN: %i\n' % tn)
+# f.write('FP: %i\n' % fp)
+# f.write('FN: %i\n' % fn)
+# f.write('TP: %i\n' % tp)
+# f.close()
 
 # release the file pointers
 print('[INFO] cleaning up...')
-for f in images:
-    os.remove(f)
+# for f in images:
+#     os.remove(f)
